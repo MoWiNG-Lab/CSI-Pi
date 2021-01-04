@@ -28,14 +28,17 @@ def setup():
     # Start listening for devices and write data to file automatically
     print("Start listening for devices")
     for i,d in enumerate(devices):
-        data_file_names[d] = f"{data_dir}{i}.csv"
+        # Set baud rate
+        subprocess.Popen(f"stty -F {d} 921600".split(" "), stdout=subprocess.PIPE)
+        # Start listening for device and write data to file
+        data_file_names[d] = f"{data_dir}{d.split('/')[-1]}.csv"
         subprocess.Popen(f"sh run.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
 
 @app.route('/')
 def index():
     #return subprocess.Popen("pwd", stdout=subprocess.PIPE).communicate()[0]
     output = subprocess.Popen(["sh","status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
-    return "<head> <meta http-equiv='refresh' content='5' /></head> <body> <pre>" + output.decode("utf-8") + "</pre> <body>"
+    return "<head> <meta http-equiv='refresh' content='1' /></head> <body> <pre>" + output.decode("utf-8") + "</pre> <body>"
 
 
 @app.route('/annotation', methods=['POST'])

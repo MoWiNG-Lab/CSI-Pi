@@ -20,25 +20,22 @@ def setup():
     data_file_names['annotations'].flush()
 
     # Identify all connected devices
-    devices = ["app.py", "storage/data/.gitignore"]  # TODO:
-    devices = subprocess.Popen("sh get_devices.sh".split(" "), stdout=subprocess.PIPE).communicate()[0].decode('utf-8').split("\n")
+    devices = subprocess.Popen("/bin/sh /home/pi/CSI-Pi/get_devices.sh".split(" "), stdout=subprocess.PIPE).communicate()[0].decode('utf-8').split("\n")
     devices = [d for d in devices if d != '']
-    print(devices)
 
     # Start listening for devices and write data to file automatically
     print("Start listening for devices")
     for i,d in enumerate(devices):
         # Set baud rate
-        subprocess.Popen(f"stty -F {d} 921600".split(" "), stdout=subprocess.PIPE)
+        subprocess.Popen(f"/bin/stty -F {d} 921600".split(" "), stdout=subprocess.PIPE)
         # Start listening for device and write data to file
         data_file_names[d] = f"{data_dir}{d.split('/')[-1]}.csv"
-        subprocess.Popen(f"sh run.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
+        subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/run.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
 
 @app.route('/')
 def index():
-    #return subprocess.Popen("pwd", stdout=subprocess.PIPE).communicate()[0]
-    output = subprocess.Popen(["sh","status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
-    return "<head> <meta http-equiv='refresh' content='1' /></head> <body> <pre>" + output.decode("utf-8") + "</pre> <body>"
+    output = subprocess.Popen(["/bin/sh","/home/pi/CSI-Pi/status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
+    return "<head><meta http-equiv='refresh' content='1'/></head> <body><pre style='white-space: pre-wrap;'>" + output.decode("utf-8") + "</pre><body>"
 
 
 @app.route('/annotation', methods=['POST'])
@@ -47,12 +44,9 @@ def new_annotation():
         'CURRENT_ACTION',
         'fake_uuid',
         str(int(time()*1000)),
-
         request.values.get('value'),
     ])) + "\n")
     data_file_names['annotations'].flush()
-    print(request.values.get('value'))
-    print(request.values.get('something'))
     return "OK"
 
 app.run(host='0.0.0.0', debug=True, port=8080)

@@ -1,4 +1,5 @@
 # Returns a list of stats which are useful to monitor while annotating CSI data 
+# $1: DATA_DIR (relative)
 
 echo "
    ___ ___ ___   ___ _ 
@@ -13,22 +14,31 @@ echo "\n"
 
 echo "========="
 echo "Config:"
-echo "DATA_DIR: $(pwd)/$1"
+echo "DATA_DIR: /home/pi/CSI-Pi/$1"
 echo "=========\n\n"
 
 echo "========="
 echo "Devices:"
-sh get_devices.sh
+sh /home/pi/CSI-Pi/get_devices.sh
 echo "=========\n\n"
 
 echo "========="
 echo "File Sizes:"
-sh get_file_sizes.sh $1
+sh /home/pi/CSI-Pi/get_file_sizes.sh $1
 echo "=========\n\n"
 
 echo "========="
-echo "Most recent actions:"
+echo "Most Recent Actions:"
 tail -5 "$1annotations.csv"
+echo "=========\n\n"
+
+echo "========="
+echo "Most Recent CSI:\n"
+ls $1 | grep tty | while read f; do
+	echo $f
+	tail -3 $1$f
+	echo "\n"
+done
 echo "=========\n\n"
 
 echo "Done"

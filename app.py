@@ -30,7 +30,7 @@ def setup():
         subprocess.Popen(f"/bin/stty -F {d} 921600".split(" "), stdout=subprocess.PIPE)
         # Start listening for device and write data to file
         data_file_names[d] = f"{data_dir}{d.split('/')[-1]}.csv"
-        subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/run.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
+        subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
 
 @app.route('/')
 def index():

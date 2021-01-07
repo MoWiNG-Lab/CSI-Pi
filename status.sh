@@ -1,5 +1,6 @@
 # Returns a list of stats which are useful to monitor while annotating CSI data 
-# $1: DATA_DIR (relative)
+# Variables: 
+# 	     $1: DATA_DIR (absolute path)
 
 echo "
    ___ ___ ___   ___ _ 
@@ -14,13 +15,19 @@ echo "\n"
 
 echo "========="
 echo "Config:"
-echo "DATA_DIR: /home/pi/CSI-Pi/$1"
+echo "DATA_DIR: $1"
 echo "=========\n\n"
 
 echo "========="
-echo "Devices:"
-sh /home/pi/CSI-Pi/get_devices.sh
-echo "=========\n\n"
+echo "Devices [Data Rate]:"
+echo "\n"
+ls /dev/ttyUSB* | while read f; do
+	echo $f
+	/bin/sh /home/pi/CSI-Pi/get_wifi_channel.sh $f
+	#tail -1 /tmp/data_rates$f
+	echo "\n"	
+done
+echo "=========\n"
 
 echo "========="
 echo "File Sizes:"

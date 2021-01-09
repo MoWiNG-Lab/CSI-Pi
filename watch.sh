@@ -13,4 +13,5 @@ ls /dev/ttyUSB* | while read f; do
 	tmux split-window -h "tail -f /tmp/data_rates$f"
 done
 
+tmux select-layout even-horizontal
 tmux attach-session

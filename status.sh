@@ -24,7 +24,7 @@ echo "\n"
 ls /dev/ttyUSB* | while read f; do
 	echo $f
 	/bin/sh /home/pi/CSI-Pi/get_wifi_channel.sh $f
-	#tail -1 /tmp/data_rates$f
+	tail -1 /tmp/data_rates$f
 	echo "\n"	
 done
 echo "=========\n"

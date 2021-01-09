@@ -1,17 +1,18 @@
 import os
 import subprocess
 from time import time
-from flask import Flask, request, send_file
 from io import BytesIO
 import zipfile
 
+from starlette.applications import Starlette
+from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
+from starlette.routing import Route
+
 data_dir = f"/home/pi/CSI-Pi/storage/data/{time()}/"
 data_file_names = {}
-app = Flask(__name__)
 
 print("DATA_DIR:", data_dir)
 
-@app.before_first_request
 def setup():
     # Create new directory each time the app is run
     os.makedirs(data_dir, exist_ok=True)
@@ -39,40 +40,42 @@ def setup():
         # Start listening for device and write data to file
         subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
 
-@app.route('/')
-def index():
+async def index(request):
     output = subprocess.Popen(["timeout", "0.25", "/bin/sh","/home/pi/CSI-Pi/status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
-    return "<head><meta http-equiv='refresh' content='1'/></head> <body><pre style='white-space: pre-wrap;'>" + output.decode("utf-8") + "</pre><body>"
+    return HTMLResponse("<head><meta http-equiv='refresh' content='1'/></head> <body><pre style='white-space: pre-wrap;'>" + output.decode("utf-8") + "</pre><body>")
 
 
-@app.route('/annotation', methods=['POST'])
-def new_annotation():
+async def new_annotation(request):
     data_file_names['annotations'].write((",".join([
         'CURRENT_ACTION',
         'fake_uuid',
         str(int(time()*1000)),
-        request.values.get('value'),
+        request.query_params['value'],
     ])) + "\n")
     data_file_names['annotations'].flush()
-    return "OK"
+    return PlainTextResponse("OK")
 
-@app.route('/data-directory')
-def get_data_directory():
-    return data_dir
+async def get_data_directory(request):
+    return PlainTextResponse(data_dir)
 
-@app.route('/data')
-def get_data():
-    file_name = 'data.zip'
-    memory_file = BytesIO()
+async def get_data_as_zip(request):
+    filename = '/tmp/data.zip'
     file_path = data_dir
-    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    
+    with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
           for root, dirs, files in os.walk(file_path):
                     for file in files:
                               zipf.write(os.path.join(root, file))
-    memory_file.seek(0)
-    return send_file(memory_file,
-                     attachment_filename=file_name,
-                     as_attachment=True)
 
-app.run(host='0.0.0.0', debug=True, port=8080)
+    return FileResponse(filename, filename=filename)
 
+setup()
+
+routes = [
+    Route("/", index),
+    Route("/annotation", new_annotation, methods=['POST']),
+    Route("/data-directory", get_data_directory),
+    Route("/data", get_data_as_zip),
+]
+
+app = Starlette(routes=routes)

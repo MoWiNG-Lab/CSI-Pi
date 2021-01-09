@@ -14,7 +14,7 @@ pip3 install -r requirements.txt
 ## Run Server
 
 ```
-python3 app.py
+uvicorn app:app --host 0.0.0.0 --port 8080
 ```
 
 View the stats at `http://<PI_IP>:8080` or `http://<PI_HOSTNAME>.local:8080`

@@ -1,9 +1,11 @@
 # CSI Pi
 
+![CSI-Pi Flow Diagram](figures/csi_pi_diagram.png)
+
 ## Raspberry Pi Setup
 
 ```
-sudo apt-get install python3-pip
+sudo apt-get install git python3-pip pv tmux 
 git clone https://github.com/StevenMHernandez/CSI-Pi.git
 cd CSI-Pi
 pip3 install -r requirements.txt

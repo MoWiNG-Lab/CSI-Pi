@@ -7,7 +7,6 @@ fi
 
 # Watch Annotations
 tmux new-session -d "tail -f $DATA_DIR/annotations.csv"
-tmux select-pane -T 'gogogo'
 
 # Get Data Rates
 ls /dev/ttyUSB* | while read f; do

@@ -30,7 +30,7 @@ def setup():
     print("Start listening for devices")
     for i,d in enumerate(devices):
         # Set baud rate
-        subprocess.Popen(f"/bin/stty -F {d} 2000000".split(" "), stdout=subprocess.PIPE)
+        subprocess.Popen(f"/bin/stty -F {d} 1500000".split(" "), stdout=subprocess.PIPE)
         
         data_file_names[d] = f"{data_dir}{d.split('/')[-1]}.csv"
         
@@ -41,7 +41,7 @@ def setup():
         subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
 
 async def index(request):
-    output = subprocess.Popen(["timeout", "0.25", "/bin/sh","/home/pi/CSI-Pi/status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
+    output = subprocess.Popen(["timeout", "0.5", "/bin/sh","/home/pi/CSI-Pi/status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
     return HTMLResponse("<head><meta http-equiv='refresh' content='1'/></head> <body><pre style='white-space: pre-wrap;'>" + output.decode("utf-8") + "</pre><body>")
 
 
@@ -63,11 +63,12 @@ async def get_data_as_zip(request):
     file_path = data_dir
     
     with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-          for root, dirs, files in os.walk(file_path):
-                    for file in files:
-                              zipf.write(os.path.join(root, file))
-
-    return FileResponse(filename, filename=filename)
+        for f in os.listdir(file_path):
+            if f != 'annotations.csv':
+                zipf.write(os.path.join(file_path, f), f"{f}/{f}")
+                zipf.write(os.path.join(file_path, 'annotations.csv'), f"{f}/annotations.csv")
+            
+    return FileResponse(filename, filename='CSI.zip')
 
 setup()
 

@@ -8,7 +8,7 @@ mkdir -p '/tmp/wifi_channel/dev/'
 if [ -f "$FILENAME" ]; then
 	tail -1 $FILENAME
 else
-	CHANNEL="$(timeout 0.25 head -10 $1 | grep "CSI" | awk -F ',' '{print "Channel: " $17}' | head -1 )"
+	CHANNEL="$(timeout 0.1 head -10 $1 | grep "CSI" | awk -F ',' '{print "Channel: " $17}' | head -1 )"
 
 	if [ ! -z "$CHANNEL" ]; then
 		echo $CHANNEL > $FILENAME

@@ -27,3 +27,27 @@ Annotating CSI data is currently done through an HTTP endpoint. While the server
 curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/annotation?value=<ACTION_OR_MEASUREMENT_VALUE>'
 ```
 
+## Power Down the USB
+
+To disable collecting data from the ESP32, you can disable to the power (technically, this does not power off the ESP32, but does make the serial data hidden from the Raspberry Pi)
+
+```
+curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_down'
+```
+
+## Power Up the USB
+
+```
+curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_up'
+```
+
+## Watch Server Stats
+
+You can watch status of the current annotation file and the data rate per connect ESP32 by running the following:
+
+```
+sh watch.sh
+```
+
+Notice, if you restart the server, you will have to rerun this script otherwise the annotation file will not appear to update.
+

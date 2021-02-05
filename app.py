@@ -25,6 +25,10 @@ def start_listening():
     print("Start Listening")
     is_listening = True
 
+    p = subprocess.Popen("sudo uhubctl -l 2 -a 1".split(), stdout=subprocess.PIPE)
+    p.wait()
+    sleep(1)
+
     # Identify all connected devices
     devices = subprocess.Popen("/bin/sh /home/pi/CSI-Pi/get_devices.sh".split(" "), stdout=subprocess.PIPE).communicate()[0].decode('utf-8').split("\n")
     devices = [d for d in devices if d != '']
@@ -40,12 +44,12 @@ def start_listening():
         data_file_names[d] = f"{data_dir}{d.split('/')[-1]}.csv"
         
         # Start listening for data rate
-        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/record_data_rate.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
+        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/record_data_rate.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE, preexec_fn=os.setsid)
         processes.append(p)
 
-#        # Start listening for device and write data to file
-#        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
-#        processes.append(p)
+        # Start listening for device and write data to file
+        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE, preexec_fn=os.setsid)
+        processes.append(p)
 
 def stop_listening():
     global is_listening, processes
@@ -55,8 +59,12 @@ def stop_listening():
     print("Stop Listening")
     is_listening = False
 
+    p = subprocess.Popen("sudo uhubctl -l 2 -a 0".split(), stdout=subprocess.PIPE)
+    p.wait()
+    
     for p in processes:
-        os.kill(p.pid, signal.SIGINT)
+        os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+        p.wait()
 
     processes = []
 
@@ -103,15 +111,10 @@ async def get_data_as_zip(request):
     return FileResponse(filename, filename='CSI.zip')
 
 async def power_up(request):
-    p = subprocess.Popen("sudo uhubctl -l 2 -a 1".split(), stdout=subprocess.PIPE)
-    p.wait()
-    sleep(1)
     start_listening()
     return PlainTextResponse("OK")
 
 async def power_down(request):
-    p = subprocess.Popen("sudo uhubctl -l 2 -a 0".split(), stdout=subprocess.PIPE)
-    p.wait()
     stop_listening()
     return PlainTextResponse("OK")
 

@@ -1,6 +1,7 @@
 import os
 import subprocess
-from time import time
+import signal
+from time import time, sleep
 from io import BytesIO
 import zipfile
 
@@ -13,18 +14,22 @@ data_file_names = {}
 
 print("DATA_DIR:", data_dir)
 
-def setup():
-    # Create new directory each time the app is run
-    os.makedirs(data_dir, exist_ok=True)
+processes = []
+is_listening = False
 
-    # Add file for annotations
-    data_file_names['annotations'] = open(data_dir + "annotations.csv","w+")
-    data_file_names['annotations'].write("type,smartphone_id,timestamp,current_action\n")
-    data_file_names['annotations'].flush()
+def start_listening():
+    global is_listening, processes
+    if is_listening:
+        return False
+
+    print("Start Listening")
+    is_listening = True
 
     # Identify all connected devices
     devices = subprocess.Popen("/bin/sh /home/pi/CSI-Pi/get_devices.sh".split(" "), stdout=subprocess.PIPE).communicate()[0].decode('utf-8').split("\n")
     devices = [d for d in devices if d != '']
+
+    print("Got devices", devices)
 
     # Start listening for devices and write data to file automatically
     print("Start listening for devices")
@@ -35,10 +40,36 @@ def setup():
         data_file_names[d] = f"{data_dir}{d.split('/')[-1]}.csv"
         
         # Start listening for data rate
-        subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/record_data_rate.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
+        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/record_data_rate.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
+        processes.append(p)
 
-        # Start listening for device and write data to file
-        subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
+#        # Start listening for device and write data to file
+#        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE)
+#        processes.append(p)
+
+def stop_listening():
+    global is_listening, processes
+    if not is_listening:
+        return False
+
+    print("Stop Listening")
+    is_listening = False
+
+    for p in processes:
+        os.kill(p.pid, signal.SIGINT)
+
+    processes = []
+
+def setup():
+    # Create new directory each time the app is run
+    os.makedirs(data_dir, exist_ok=True)
+
+    # Add file for annotations
+    data_file_names['annotations'] = open(data_dir + "annotations.csv","w+")
+    data_file_names['annotations'].write("type,smartphone_id,timestamp,current_action\n")
+    data_file_names['annotations'].flush()
+
+    start_listening()
 
 async def index(request):
     output = subprocess.Popen(["timeout", "0.5", "/bin/sh","/home/pi/CSI-Pi/status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
@@ -65,10 +96,24 @@ async def get_data_as_zip(request):
     with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for f in os.listdir(file_path):
             if f != 'annotations.csv':
-                zipf.write(os.path.join(file_path, f), f"{f}/{f}")
-                zipf.write(os.path.join(file_path, 'annotations.csv'), f"{f}/annotations.csv")
+                d = f.replace(".csv", "")
+                zipf.write(os.path.join(file_path, f), f"{d}/{f}")
+                zipf.write(os.path.join(file_path, 'annotations.csv'), f"{d}/annotations.csv")
             
     return FileResponse(filename, filename='CSI.zip')
+
+async def power_up(request):
+    p = subprocess.Popen("sudo uhubctl -l 2 -a 1".split(), stdout=subprocess.PIPE)
+    p.wait()
+    sleep(1)
+    start_listening()
+    return PlainTextResponse("OK")
+
+async def power_down(request):
+    p = subprocess.Popen("sudo uhubctl -l 2 -a 0".split(), stdout=subprocess.PIPE)
+    p.wait()
+    stop_listening()
+    return PlainTextResponse("OK")
 
 setup()
 
@@ -77,6 +122,8 @@ routes = [
     Route("/annotation", new_annotation, methods=['POST']),
     Route("/data-directory", get_data_directory),
     Route("/data", get_data_as_zip),
+    Route("/power_up", power_up, methods=['POST']),
+    Route("/power_down", power_down, methods=['POST']),
 ]
 
 app = Starlette(routes=routes)

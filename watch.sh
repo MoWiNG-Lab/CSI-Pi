@@ -14,4 +14,8 @@ ls /dev/ttyUSB* | while read f; do
 done
 
 tmux select-layout even-horizontal
+
+tmux select-pane -t0
+tmux split-window -v "bash"
+
 tmux attach-session

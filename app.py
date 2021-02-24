@@ -16,11 +16,10 @@ data_file_names = {}
 
 print("DATA_DIR:", data_dir)
 
-processes = []
 is_listening = False
 
 def start_listening():
-    global is_listening, processes
+    global is_listening
     if is_listening:
         return False
 
@@ -42,15 +41,13 @@ def start_listening():
         data_file_names[d] = f"{data_dir}{d.split('/')[-1]}.csv"
         
         # Start listening for data rate
-        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/record_data_rate.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE, preexec_fn=os.setsid)
-        processes.append(p)
+        subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/record_data_rate.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE, preexec_fn=os.setsid)
 
         # Start listening for device and write data to file
-        p = subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE, preexec_fn=os.setsid)
-        processes.append(p)
+        subprocess.Popen(f"/bin/sh /home/pi/CSI-Pi/load_and_save_csi.sh {d} {data_file_names[d]}".split(" "), stdout=subprocess.PIPE, preexec_fn=os.setsid)
 
 def stop_listening():
-    global is_listening, processes
+    global is_listening
     if not is_listening:
         return False
 
@@ -110,19 +107,12 @@ async def power_down(request):
     return PlainTextResponse("OK")
 
 def kill_child_processes():
-    global processes
-
     pid = os.getpid()
-    print(pid, psutil.Process(pid).children(recursive=True))
-
-
     for child in psutil.Process(pid).children(recursive=True):
         try:
             child.kill()
         except:
             pass
-
-    processes = []
 
 
 # When the python process is killed (at exit), clean up all existing child processes)

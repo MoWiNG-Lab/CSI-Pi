@@ -4,6 +4,8 @@ import signal
 from time import time, sleep
 from io import BytesIO
 import zipfile
+import atexit
+import psutil
 
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
@@ -24,10 +26,6 @@ def start_listening():
 
     print("Start Listening")
     is_listening = True
-
-    p = subprocess.Popen("sudo uhubctl -l 2 -a 1".split(), stdout=subprocess.PIPE)
-    p.wait()
-    sleep(1)
 
     # Identify all connected devices
     devices = subprocess.Popen("/bin/sh /home/pi/CSI-Pi/get_devices.sh".split(" "), stdout=subprocess.PIPE).communicate()[0].decode('utf-8').split("\n")
@@ -59,14 +57,7 @@ def stop_listening():
     print("Stop Listening")
     is_listening = False
 
-    p = subprocess.Popen("sudo uhubctl -l 2 -a 0".split(), stdout=subprocess.PIPE)
-    p.wait()
-    
-    for p in processes:
-        os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-        p.wait()
-
-    processes = []
+    kill_child_processes()
 
 def setup():
     # Create new directory each time the app is run
@@ -117,6 +108,22 @@ async def power_up(request):
 async def power_down(request):
     stop_listening()
     return PlainTextResponse("OK")
+
+def kill_child_processes():
+    global processes
+
+    pid = os.getpid()
+    print(pid, psutil.Process(pid).children(recursive=True))
+
+
+    for child in psutil.Process(pid).children(recursive=True):
+            child.kill()
+
+    processes = []
+
+
+# When the python process is killed (at exit), clean up all existing child processes)
+atexit.register(kill_child_processes)
 
 setup()
 

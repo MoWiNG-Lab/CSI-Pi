@@ -117,7 +117,10 @@ def kill_child_processes():
 
 
     for child in psutil.Process(pid).children(recursive=True):
+        try:
             child.kill()
+        except:
+            pass
 
     processes = []
 

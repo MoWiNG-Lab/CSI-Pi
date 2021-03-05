@@ -21,10 +21,14 @@ echo "=========\n\n"
 echo "========="
 echo "Devices [Data Rate]:"
 echo "\n"
+WRITE_CSI_LOCK='/tmp/lock.write_csi.txt'
 ls /dev/ttyUSB* | while read f; do
 	echo $f
 	/bin/sh /home/pi/CSI-Pi/get_wifi_channel.sh $f
 	tail -1 /tmp/data_rates$f
+	if [ $(cat $WRITE_CSI_LOCK) -eq 0 ]; then   
+		echo " -> CURRENTLY NOT WRITING CSI TO FILE!! (POWERED_DOWN)"
+	fi
 	echo "\n"	
 done
 echo "=========\n"

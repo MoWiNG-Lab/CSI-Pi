@@ -11,6 +11,7 @@ from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
 from starlette.routing import Route
 
+WRITE_CSI_LOCK='/tmp/lock.write_csi.txt'
 data_dir = f"/home/pi/CSI-Pi/storage/data/{time()}/"
 data_file_names = {}
 
@@ -98,12 +99,17 @@ async def get_data_as_zip(request):
             
     return FileResponse(filename, filename='CSI.zip')
 
+def toggle_csi(value):
+    global WRITE_CSI_LOCK
+    with open(WRITE_CSI_LOCK, 'w') as f:
+        f.write(value)
+
 async def power_up(request):
-    start_listening()
+    toggle_csi("1")
     return PlainTextResponse("OK")
 
 async def power_down(request):
-    stop_listening()
+    toggle_csi("0")
     return PlainTextResponse("OK")
 
 def kill_child_processes():
@@ -119,6 +125,7 @@ def kill_child_processes():
 atexit.register(kill_child_processes)
 
 setup()
+toggle_csi("1")
 
 routes = [
     Route("/", index),

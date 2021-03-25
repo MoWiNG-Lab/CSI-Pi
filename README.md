@@ -9,6 +9,9 @@ sudo apt-get install git python3-pip pv tmux
 git clone https://github.com/StevenMHernandez/CSI-Pi.git
 cd CSI-Pi
 pip3 install -r requirements.txt
+
+# Set Your Local Timezone
+sudo dpkg-reconfigure tzdata
 ```
 
 ## Run Server

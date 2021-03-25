@@ -38,8 +38,12 @@ echo "File Sizes:"
 sh /home/pi/CSI-Pi/get_file_sizes.sh $1
 echo "=========\n\n"
 
+
+
 echo "========="
 echo "Most Recent Actions:"
+TIMESTAMP=$(tail -1 "$1annotations.csv" | awk -F, '{print substr($3,1,length($1)-4)}')
+echo " - (Most recent action recorded on: $(date -d @$TIMESTAMP))\n"
 tail -5 "$1annotations.csv"
 echo "=========\n\n"
 
@@ -47,6 +51,8 @@ echo "========="
 echo "Most Recent CSI:\n"
 ls $1 | grep tty | while read f; do
 	echo $f
+	TIMESTAMP=$(tail -1 $1$f | awk -F, '{print $(NF-1)}' | awk -F. '{print substr($1,1,length($1)-3)}')
+	echo " - (Most recent CSI sample collected on: $(date -d @$TIMESTAMP))\n"
 	tail -3 $1$f
 	echo "\n"
 done

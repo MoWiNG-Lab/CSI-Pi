@@ -24,7 +24,8 @@ echo "\n"
 WRITE_CSI_LOCK='/tmp/lock.write_csi.txt'
 ls /dev/ttyUSB* | while read f; do
 	echo $f
-	/bin/sh /home/pi/CSI-Pi/get_wifi_channel.sh $f
+	device=$(echo $f | awk -F"/" '{print $3}')
+	/bin/sh /home/pi/CSI-Pi/get_wifi_channel.sh $f $1$device.csv
 	tail -1 /tmp/data_rates$f
 	if [ $(cat $WRITE_CSI_LOCK) -eq 0 ]; then   
 		echo " -> CURRENTLY NOT WRITING CSI TO FILE!! (POWERED_DOWN)"

@@ -54,3 +54,13 @@ sh watch.sh
 
 Notice, if you restart the server, you will have to rerun this script otherwise the annotation file will not appear to update.
 
+## Run on startup
+
+You can run the system on boot through the following:
+
+```
+sudo cp ./csipi.service /etc/systemd/system/csipi.service
+sudo systemctl start csipi.service
+sudo systemctl enable myscript.service
+```
+

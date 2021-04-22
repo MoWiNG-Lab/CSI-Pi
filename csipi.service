@@ -1,0 +1,15 @@
+[Unit]
+Description=CSI-Pi
+After=network.target
+
+[Service]
+ExecStart=/home/pi/.local/bin/uvicorn app:app --host 0.0.0.0 --port 8080
+WorkingDirectory=/home/pi/CSI-Pi
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+

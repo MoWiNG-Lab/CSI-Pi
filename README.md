@@ -20,7 +20,9 @@ sudo dpkg-reconfigure tzdata
 uvicorn app:app --host 0.0.0.0 --port 8080
 ```
 
-View the stats at `http://<PI_IP>:8080` or `http://<PI_HOSTNAME>.local:8080`
+**Note**: a better way to handle this is to automatically run this script on boot. Then you will not need to SSH to start recording. To do this, see **"Run on startup"** below.
+
+View CSI-Pi stats at `http://<PI_IP>:8080` or `http://<PI_HOSTNAME>.local:8080`.
 
 ## Annotate CSI Data
 
@@ -61,6 +63,12 @@ You can run the system on boot through the following:
 ```
 sudo cp ./csipi.service /etc/systemd/system/csipi.service
 sudo systemctl start csipi.service
-sudo systemctl enable myscript.service
+sudo systemctl enable csipi.service
 ```
 
+You can stop and restart the service with the following commands too:
+
+```
+sudo systemctl stop csipi.service
+sudo systemctl restart csipi.service
+```

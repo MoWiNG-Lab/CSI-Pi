@@ -69,7 +69,7 @@ def setup():
     start_listening()
 
 async def index(request):
-    output = subprocess.Popen(["timeout", "0.5", "/bin/sh","/home/pi/CSI-Pi/status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
+    output = subprocess.Popen(["timeout", "0.9", "/bin/sh","/home/pi/CSI-Pi/status.sh",data_dir], stdout=subprocess.PIPE).communicate()[0]
     return HTMLResponse("<head><meta http-equiv='refresh' content='1'/></head> <body><pre style='white-space: pre-wrap;'>" + output.decode("utf-8") + "</pre><body>")
 
 

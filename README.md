@@ -12,6 +12,12 @@ pip3 install -r requirements.txt
 
 # Set Your Local Timezone
 sudo dpkg-reconfigure tzdata
+
+# Set the name for the deployment location
+echo "example_location_name" > ./name.txt
+
+# Setup automatic USB Flash Drive Backup
+# When you plug in a USB flash drive, it should save 
 ```
 
 ## Run Server
@@ -64,3 +70,35 @@ sudo systemctl start csipi.service
 sudo systemctl enable myscript.service
 ```
 
+## USB Flash Drive Auto-backup
+
+Data is stored on the device, but this does not give us an easy way to collect data from the raspberry pi. One method is to mount a usb flash drive to save the files. To achieve, this we need to first setup auto-mount:
+
+```
+$ mkdir /home/pi/CSI-Pi/usb_data_dump
+$ sudo vim /etc/fstab
+
+# Add the next line to the bottom of the file
+/dev/sda1 /home/pi/CSI-Pi/usb_data_dump vfat uid=pi,gid=pi,umask=0022,sync,auto,nosuid,rw,nouser,nofail 0   0 
+```
+
+Next, create a new crontab entry which will be run every minute to check if a new USB flash drive was attached:
+
+```
+$ crontab -e
+
+# Add the next line to the bottom of the file
+* * * * * cd /home/pi/CSI-Pi && /usr/bin/sh usb_status.sh
+```
+
+Now, every minute, the raspberry pi will check if a USB stick is attached. If the stick is attached, it will copy over the current experiment data to the flash drive. It may take some time to complete this process. As such, the green LED on the raspberry pi will give some status information.
+
+- LED Off: USB device is not attached.
+- LED ON: USB device is detected.
+- LED BLINKING: Data is being saved to the flash drive. Do not disconnect.
+
+## Common Issues
+
+**Power Supply**. Make sure you have a powerful enough power supply to prevent a brown out. Brown outs can cause the Raspberry Pi to reset randomly, especially when many USB devices are attached.
+
+**ESP32 Module**. Some modules seem to cause more issues than others. *We have not yet figure out why some work very easily and other cause a lot of headaches. Help in analyzing this is appreciated!* 

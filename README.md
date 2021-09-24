@@ -2,13 +2,18 @@
 
 ![CSI-Pi Flow Diagram](figures/csi_pi_diagram.png)
 
+![CSI-Pi Flow Diagram](figures/csi_pi_metrics.png)
+
 ## Raspberry Pi Setup
 
 ```
-sudo apt-get install git python3-pip pv tmux 
+sudo apt-get install git python3-pip pv tmux libgirepository1.0-dev 
 git clone https://github.com/StevenMHernandez/CSI-Pi.git
 cd CSI-Pi
 pip3 install -r requirements.txt
+
+# Add your user to the dailout group for non-sudo access to TTY devices
+sudo usermod -a -G dialout $USER
 
 # Set Your Local Timezone
 sudo dpkg-reconfigure tzdata
@@ -23,7 +28,7 @@ echo "example_location_name" > ./name.txt
 ## Run Server
 
 ```
-uvicorn app:app --host 0.0.0.0 --port 8080
+uvicorn src.csi_pi.app:app --host 0.0.0.0 --port 8080
 ```
 
 **Note**: a better way to handle this is to automatically run this script on boot. Then you will not need to SSH to start recording. To do this, see **"Run on startup"** below.

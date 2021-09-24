@@ -3,3 +3,5 @@
 __pycache__/
 venv/
 name.txt
+usb_data_dump/
+.env

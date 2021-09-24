@@ -21,7 +21,6 @@ pycairo==1.20.0
 pycrypto==2.6.1
 pydantic==1.7.3
 PyGObject==3.30.4
-python-apt==1.8.4.3
 python-dotenv==0.15.0
 pyxdg==0.25
 PyYAML==5.3.1

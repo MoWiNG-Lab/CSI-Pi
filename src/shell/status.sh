@@ -1,6 +1,7 @@
 # Returns a list of stats which are useful to monitor while annotating CSI data 
 # Variables: 
 # 	     $1: DATA_DIR (absolute path)
+# 	     $2: APP_DIR (absolute path)
 
 echo "
    ___ ___ ___   ___ _ 
@@ -16,6 +17,7 @@ echo "\n"
 echo "========="
 echo "Config:"
 echo "DATA_DIR: $1"
+echo "APP_DIR: $2"
 echo "=========\n\n"
 
 echo "========="
@@ -25,18 +27,18 @@ WRITE_CSI_LOCK='/tmp/lock.write_csi.txt'
 ls /dev/ttyUSB* | while read f; do
 	echo $f
 	device=$(echo $f | awk -F"/" '{print $3}')
-	/bin/sh /home/pi/CSI-Pi/get_wifi_channel.sh $f $1$device.csv
+	/bin/sh $2/src/shell/get_wifi_channel.sh $f $1$device.csv
 	tail -1 /tmp/data_rates$f
-	if [ $(cat $WRITE_CSI_LOCK) -eq 0 ]; then   
+	if [ $(cat $WRITE_CSI_LOCK) -eq 0 ]; then
 		echo " -> CURRENTLY NOT WRITING CSI TO FILE!! (POWERED_DOWN)"
 	fi
-	echo "\n"	
+	echo "\n"
 done
 echo "=========\n"
 
 echo "========="
 echo "File Sizes:"
-sh /home/pi/CSI-Pi/get_file_sizes.sh $1
+ls -al $1
 echo "=========\n\n"
 
 

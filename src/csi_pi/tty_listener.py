@@ -58,9 +58,9 @@ class ReadLine:
                 if r[0:-2].split(",")[0] != "CSI_DATA":
                     continue
 
-                # Get WiFi Channel
+                # Get Application Name
                 application = r[0:-2].split(",")[1]
-                if self.wifi_channel != application:
+                if self.application != application:
                     f = open(f"/tmp/application{self.tty_full_path}", "w")
                     f.write(str(application))
                     f.close()

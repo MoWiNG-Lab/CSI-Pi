@@ -1,3 +1,4 @@
+import os
 import sys
 import math
 import serial
@@ -21,7 +22,7 @@ class ReadLine:
 
     def readline(self):
         i = self.buf.find(b"\n")
-        if i >= 0:  # Why is this duplicated?? TODO: Consider why.
+        if i >= 0:
             r = self.buf[:i + 1]
             self.buf = self.buf[i + 1:]
             return f"{str(r)[0:-2]},fake_uuid,{time() * 1000},example_experiment_name"
@@ -37,12 +38,14 @@ class ReadLine:
 
                 # Process Data Rate Statistics
                 curr_time_seconds = time()
-                if self.data_rate_stats['current_second'] is None or self.data_rate_stats['current_second'] != math.floor(curr_time_seconds):
-                    self.data_rate_stats['current_second'] = math.floor(curr_time_seconds)
+                curr_time_seconds_floor = math.floor(curr_time_seconds)
+                if (self.data_rate_stats['current_second'] is None) or \
+                        (self.data_rate_stats['current_second'] != curr_time_seconds_floor):
+                    self.data_rate_stats['current_second'] = curr_time_seconds_floor
                     print("Got rate of", self.data_rate_stats['count'], "Hz")
 
-                    self.data_rate_stats_file = open(f"/tmp/data_rates/{self.tty_full_path}", "a")
-                    self.data_rate_stats_file.write(f"{math.floor(curr_time_seconds)},{self.data_rate_stats['count']}\n")
+                    self.data_rate_stats_file = open(f"/tmp/data_rates{self.tty_full_path}", "a")
+                    self.data_rate_stats_file.write(f"{curr_time_seconds_floor},{self.data_rate_stats['count']}\n")
                     self.data_rate_stats['count'] = 0
                 self.data_rate_stats['count'] += 1
 
@@ -60,7 +63,8 @@ if __name__ == "__main__":
     rl = ReadLine(ser, tty_full_path)
 
     # CLEAR File
-    open(f"/tmp/data_rates/{tty_full_path}", "w").close()
+    os.makedirs("/tmp/data_rates/dev/", exist_ok=True)
+    open(f"/tmp/data_rates{tty_full_path}", "w").close()
 
     while True:
         # LOOP for each PRINTABLE unit

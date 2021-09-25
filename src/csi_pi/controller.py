@@ -15,7 +15,7 @@ class Controller:
 
     async def index(self, request):
         output = subprocess.Popen(
-            ["timeout", "0.9", "/bin/sh", f"{self.config.shell_dir}/status.sh", self.config.data_dir, self.config.home_dir],
+            ["timeout", "0.9", "/bin/sh", f"{self.config.shell_dir}/status.sh", self.config.data_dir, self.config.app_dir],
             stdout=subprocess.PIPE
         ).communicate()[0]
 

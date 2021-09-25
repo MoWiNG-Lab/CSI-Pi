@@ -1,5 +1,5 @@
 import os
-import subprocess
+import json
 from time import time
 import zipfile
 
@@ -13,15 +13,19 @@ class Controller:
     def __init__(self, config: Config):
         self.config = config
 
-    async def index(self, request):
-        output = subprocess.Popen(
-            ["timeout", "0.9", "/bin/sh", f"{self.config.shell_dir}/status.sh", self.config.data_dir, self.config.app_dir],
-            stdout=subprocess.PIPE
-        ).communicate()[0]
+    @staticmethod
+    def load_from_file(file_name):
+        output = ""
 
-        return HTMLResponse(
-            "<head><meta http-equiv='refresh' content='1'/></head> <body><pre style='white-space: pre-wrap;'>" + output.decode(
-                "utf-8") + "</pre><body>")
+        if os.path.exists(file_name):
+            f = open(file_name, 'r')
+            output = f.read()
+            f.close()
+
+        return output
+
+    async def index(self, request):
+        return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/html/index.html').read())
 
     async def new_annotation(self, request):
         self.config.data_file_names['annotations'].write((",".join([
@@ -35,6 +39,28 @@ class Controller:
 
     async def get_data_directory(self, request):
         return PlainTextResponse(self.config.data_dir)
+
+    async def get_annotation_metrics(self, request):
+        return PlainTextResponse(json.dumps({
+            'data': self.load_from_file(self.config.data_file_names['annotations'].name)
+        }))
+
+    async def get_device_list(self, request):
+        return PlainTextResponse(json.dumps(self.config.devices))
+
+    async def get_device_metrics(self, request):
+        device_name = request.query_params['device_name']
+        return PlainTextResponse(json.dumps({
+            'device_name': device_name,
+            'file': self.config.data_file_names[device_name],
+            'application': self.load_from_file(f'/tmp/application/{device_name}'),
+            'wifi_channel': self.load_from_file(f'/tmp/wifi_channel/{device_name}'),
+            'data_rate': self.load_from_file(f'/tmp/data_rates/{device_name}'),
+            'files_size': os.path.getsize(self.config.data_file_names[device_name]),
+            'most_recent_csi': {
+                'samples': os.popen(f'tail -n 3 {self.config.data_file_names[device_name]}').read(),
+            }
+        }))
 
     async def get_data_as_zip(self, request):
         filename = '/tmp/data.zip'
@@ -56,4 +82,3 @@ class Controller:
     async def power_down(self, request):
         toggle_csi(self.config, "0")
         return PlainTextResponse("OK")
-

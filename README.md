@@ -1,8 +1,10 @@
 # CSI Pi
 
+![CSI-Pi Vue.js Web Interface](figures/csi_pi_web.png)
+
 ![CSI-Pi Flow Diagram](figures/csi_pi_diagram.png)
 
-![CSI-Pi Flow Diagram](figures/csi_pi_metrics.png)
+![CSI-Pi Metrics Flow](figures/csi_pi_metrics.png)
 
 ## Raspberry Pi Setup
 
@@ -57,12 +59,20 @@ curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_down'
 curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_up'
 ```
 
+### Ad-hoc Server Stats
+
+If you want to view current status from the terminal run the following:
+
+```
+sh src/shell/status.sh
+```
+
 ## Watch Server Stats
 
 You can watch status of the current annotation file and the data rate per connect ESP32 by running the following:
 
 ```
-sh watch.sh
+sh src/shell/watch.sh
 ```
 
 Notice, if you restart the server, you will have to rerun this script otherwise the annotation file will not appear to update.
@@ -72,6 +82,7 @@ Notice, if you restart the server, you will have to rerun this script otherwise 
 You can run the system on boot through the following:
 
 ```
+# Edit `./csipi.service` depending on your USER and HOME_DIR
 sudo cp ./csipi.service /etc/systemd/system/csipi.service
 sudo systemctl start csipi.service
 sudo systemctl enable csipi.service
@@ -102,7 +113,7 @@ Next, create a new crontab entry which will be run every minute to check if a ne
 $ crontab -e
 
 # Add the next line to the bottom of the file
-* * * * * cd /home/pi/CSI-Pi && /usr/bin/sh usb_status.sh
+* * * * * cd /home/pi/CSI-Pi && /usr/bin/sh src/shell/usb_status.sh
 ```
 
 Now, every minute, the raspberry pi will check if a USB stick is attached. If the stick is attached, it will copy over the current experiment data to the flash drive. It may take some time to complete this process. As such, the green LED on the raspberry pi will give some status information.

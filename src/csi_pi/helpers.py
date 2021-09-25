@@ -13,12 +13,12 @@ def start_listening(config: Config):
     config.is_listening = True
 
     # Identify all connected devices
-    devices = sorted(["/dev/" + d for d in os.listdir("/dev") if "ttyUSB" in d])
-    print("Got devices", devices)
+    config.devices = sorted(["/dev/" + d for d in os.listdir("/dev") if "ttyUSB" in d])
+    print("Got devices", config.devices)
 
     # Start listening for devices and write data to file automatically
     print("Start listening for devices")
-    for i, d in enumerate(devices):
+    for i, d in enumerate(config.devices):
         # Set baud rate
         subprocess.Popen(f"/bin/stty -F {d} 921600".split(" "), stdout=subprocess.PIPE)
 

@@ -122,6 +122,17 @@ Now, every minute, the raspberry pi will check if a USB stick is attached. If th
 - LED ON: USB device is detected.
 - LED BLINKING: Data is being saved to the flash drive. Do not disconnect.
 
+## Hourly Statistics
+
+If you use discord, you can setup a cronjob to automatically send hourly statistics to a discord webhook. 
+Edit your crontab with `crontab -e` and add the following lines: 
+(Note: you must set your own value for `CSI_PI_WEBHOOK`)
+
+```
+CSI_PI_WEBHOOK='https://discord.com/api/webhooks/123123123/abc123123abc'
+0 * * * *  /usr/bin/curl --location --request POST $CSI_PI_WEBHOOK --form "content=\"$(/bin/sh /home/pi/CSI-Pi/src/shell/daily_stats.sh)\""
+```
+
 ## Common Issues
 
 **Power Supply**. Make sure you have a powerful enough power supply to prevent a brown out. Brown outs can cause the Raspberry Pi to reset randomly, especially when many USB devices are attached.

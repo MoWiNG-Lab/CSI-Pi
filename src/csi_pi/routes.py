@@ -1,4 +1,6 @@
 from starlette.routing import Route
+from starlette.routing import Mount
+from starlette.staticfiles import StaticFiles
 
 from src.csi_pi.controller import Controller
 
@@ -7,6 +9,7 @@ def get_routes(controller: Controller):
     return [
         # Static Routes
         Route("/", controller.index),
+        Mount('/js', app=StaticFiles(directory='src/csi_pi/resources/js'), name="js"),
 
         # Perform Actions
         Route("/data", controller.get_data_as_zip),

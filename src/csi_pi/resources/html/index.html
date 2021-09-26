@@ -74,10 +74,10 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
 
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue-apexcharts"></script>
+<script src="/js/vue.min.js"></script>
+<script src="/js/axios.min.js"></script>
+<script src="/js/apexcharts.min.js"></script>
+<script src="/js/vue-apexcharts.min.js"></script>
 <script>
     var app = null;
     window.onload = () => {
@@ -142,25 +142,32 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
             },
             methods: {
                 reload() {
+                    self = this
                     axios.get("/device-list")
                         .then(response => {
                             response.data.forEach(device_name => {
-                                window.setInterval(() => {
+                                function load_device_metrics() {
                                     axios.get("/device-metrics?device_name=" + device_name)
                                         .then(response => {
-                                            this.devices[device_name] = response.data;
-                                            this.device_loaded = response.data.device_name;  // TODO: Figure out why this is required..
+                                            self.devices[device_name] = response.data;
+                                            self.device_loaded = response.data.device_name;  // TODO: Figure out why this is required..
+                                            setTimeout(load_device_metrics, 1000);
                                         });
-                                }, 1000)
+
+                                }
+                                load_device_metrics()
                             });
                         });
 
-                    window.setInterval(() => {
+                    function load_annotation_metrics() {
                         axios.get("/annotation-metrics")
                             .then(response => {
                                 this.annotations_data = response.data.data;
+                                setTimeout(load_annotation_metrics, 10000);
                             });
-                    }, 1000)
+                    }
+
+                    load_annotation_metrics()
 
                     axios.get("/data-directory")
                         .then(response => {

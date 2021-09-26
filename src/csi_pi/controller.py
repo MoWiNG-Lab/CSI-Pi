@@ -25,7 +25,7 @@ class Controller:
         return output
 
     async def index(self, request):
-        return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/html/index.html').read())
+        return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/resources/html/index.html').read())
 
     async def new_annotation(self, request):
         self.config.data_file_names['annotations'].write((",".join([
@@ -55,7 +55,7 @@ class Controller:
             'file': self.config.data_file_names[device_name],
             'application': self.load_from_file(f'/tmp/application/{device_name}'),
             'wifi_channel': self.load_from_file(f'/tmp/wifi_channel/{device_name}'),
-            'data_rate': self.load_from_file(f'/tmp/data_rates/{device_name}'),
+            'data_rate': os.popen(f'tail -n 60 /tmp/data_rates/{device_name}').read(),
             'files_size': os.path.getsize(self.config.data_file_names[device_name]),
             'most_recent_csi': {
                 'samples': os.popen(f'tail -n 3 {self.config.data_file_names[device_name]}').read(),

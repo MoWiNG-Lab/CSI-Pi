@@ -54,10 +54,10 @@ Devices:
 Device: {{ dev.device_name }}
 Application: {{ dev.application }}
 Channel: {{ dev.wifi_channel }}
-Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).at(-1) }} Hz
+Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz
 File Size: {{ dev.files_size }} bytes</pre>
         <pre class="horizontal_scrollable" v-if="dev.most_recent_csi.samples.length > 0">
-Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(",").at(-2)).slice(-2,-1).map(x => new Date(parseFloat(x)))[0] }}
+Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(",").slice(-2, -1)[0]).slice(-2,-1).map(x => new Date(parseFloat(x)))[0] }}
 
 {{ dev.most_recent_csi.samples }}</pre>
     </div>
@@ -66,7 +66,7 @@ Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(
 
 ---------
 annotations.csv
-Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",").at(2)).slice(-2, -1).map(x => new Date(parseInt(x)))[0] }}
+Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")[2]).slice(-2, -1).map(x => new Date(parseInt(x)))[0] }}
 ---------
 
 {{ annotations_data }}
@@ -150,11 +150,12 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                                     axios.get("/device-metrics?device_name=" + device_name)
                                         .then(response => {
                                             self.devices[device_name] = response.data;
-                                            self.device_loaded = response.data.device_name;  // TODO: Figure out why this is required..
+                                            self.device_loaded = response.data.device_name + " : " + Math.random();  // TODO: Figure out why this is required..
                                             setTimeout(load_device_metrics, 1000);
                                         });
 
                                 }
+
                                 load_device_metrics()
                             });
                         });

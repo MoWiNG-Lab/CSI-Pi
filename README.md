@@ -122,6 +122,15 @@ Now, every minute, the raspberry pi will check if a USB stick is attached. If th
 - LED ON: USB device is detected.
 - LED BLINKING: Data is being saved to the flash drive. Do not disconnect.
 
+**Alternatively:** If you want to copy ALL historically recorded data files manually, you can run the following:
+
+```
+sh src/shell/usb_save_all.sh $YOUR_UNIQUE_DEVICE_NAME
+```
+
+Where `YOUR_UNIQUE_DEVICE_NAME` is some arbitrary name given to your device.  
+The files will be stored on your flash drive under the directory `/CSI-Pi/$YOUR_UNIQUE_DEVICE_NAME/1630123456.0123456/*`.
+
 ## Hourly Statistics
 
 If you use discord, you can setup a cronjob to automatically send hourly statistics to a discord webhook. 

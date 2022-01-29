@@ -82,3 +82,33 @@ class Controller:
     async def power_down(self, request):
         toggle_csi(self.config, "0")
         return PlainTextResponse("OK")
+
+    async def get_experiment_name(self, request):
+        experiment_name = self.load_from_file(self.config.data_file_names['experiment_name'])
+        return PlainTextResponse(experiment_name)
+
+    async def get_notes(self, request):
+        experiment_name = self.load_from_file(self.config.data_file_names['notes'])
+        return PlainTextResponse(experiment_name)
+
+    async def set_experiment_name(self, request):
+        form = await request.json()
+        new_experiment_name = form['name']
+
+        f = open(self.config.data_file_names['experiment_name'], "w+")
+        f.truncate(0)
+        f.write(new_experiment_name + "\n")
+        f.flush()
+
+        return PlainTextResponse(new_experiment_name)
+
+    async def set_notes(self, request):
+        form = await request.json()
+        new_note_data = form['note']
+
+        f = open(self.config.data_file_names['notes'], "w+")
+        f.truncate(0)
+        f.write(new_note_data)
+        f.flush()
+
+        return PlainTextResponse(new_note_data)

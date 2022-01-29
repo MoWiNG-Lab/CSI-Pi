@@ -3,8 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <style>
+        * {
+            font-family: monospace
+        }
+
         pre {
             margin: 0;
+        }
+
+        input, textarea {
+            border: black 1px solid;
+            width: 400px;
+            max-width: 400px;
+            padding: 4px;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            height: 50px;
         }
 
         .device_block {
@@ -12,7 +28,7 @@
             padding: 4px;
             display: inline-block;
             max-width: 400px;
-            margin: 20px;
+            margin: 20px 40px 20px 0px;
             border-radius: 2px;
         }
 
@@ -25,23 +41,38 @@
         .device_block .horizontal_scrollable::-webkit-scrollbar {
             display: none;
         }
+
+        [v-cloak] { display: none; }
     </style>
     <title>CSI-Pi</title>
 </head>
 <body>
 <div id="app">
-<pre style='white-space: pre-wrap;'>
+<pre>
    ___ ___ ___   ___ _
   / __/ __|_ _| | _ (_)
  | (__\__ \| |  |  _/ |
   \___|___/___| |_| |_|
 
 CSI Pi, Steven M. Hernandez
+</pre>
+<div v-if="false">Loading...</div>
+<div v-cloak>
+<pre style='white-space: pre-wrap;'>
 
 ---------
-DATA_DIR: {{data_dir}}</pre>
-    <pre>TEST_DEBUG: {{ device_loaded }}</pre>
-    <pre>---------
+DATA_DIR: {{data_dir}}
+TEST_DEBUG: {{ device_loaded }}
+</pre>
+EXPERIMENT_NAME:
+<br>
+<input type="text" v-model="experiment_name">
+<br>
+NOTES:
+<br>
+<textarea v-model="notes"></textarea>
+<pre>
+---------
 
 ---------
 Devices:
@@ -71,13 +102,14 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
 
 {{ annotations_data }}
 </pre>
-
-
 </div>
+</div>
+
 <script src="/js/vue.min.js"></script>
 <script src="/js/axios.min.js"></script>
 <script src="/js/apexcharts.min.js"></script>
 <script src="/js/vue-apexcharts.min.js"></script>
+<script src="/js/lodash.full.min.js"></script>
 <script>
     var app = null;
     window.onload = () => {
@@ -90,6 +122,8 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                     devices: {},
                     data_rates: {},
                     annotations_data: "",
+                    notes: "",
+                    experiment_name: "",
                     chartOptions: {
                         chart: {
                             id: 'realtime',
@@ -143,6 +177,14 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
             methods: {
                 reload() {
                     self = this
+                    axios.get("/experiment-name")
+                        .then(response => {
+                            self.experiment_name = response.data
+                        })
+                    axios.get("/notes")
+                        .then(response => {
+                            self.notes = response.data
+                        })
                     axios.get("/device-list")
                         .then(response => {
                             response.data.forEach(device_name => {
@@ -178,6 +220,26 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
             },
             mounted() {
                 this.reload()
+            },
+            watch: {
+                experiment_name: _.debounce(function(value) {
+                    axios({
+                        method: "post",
+                        url: '/experiment-name',
+                        data: {
+                            'name': value,
+                        },
+                    })
+                }, 500),
+                notes: _.debounce(function(value) {
+                    axios({
+                        method: "post",
+                        url: '/notes',
+                        data: {
+                            'note': value,
+                        },
+                    })
+                }, 500),
             }
         });
 

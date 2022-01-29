@@ -50,6 +50,18 @@ def setup_app(config: Config):
     config.data_file_names['annotations'].write("type,smartphone_id,timestamp,current_action\n")
     config.data_file_names['annotations'].flush()
 
+    # Add file for experiment_name
+    config.data_file_names['experiment_name'] = config.data_dir + "experiment_name.txt"
+    f = open(config.data_file_names['experiment_name'], "w+")
+    f.write("default-experiment-name")
+    f.flush()
+
+    # Add file for notes
+    config.data_file_names['notes'] = config.data_dir + "notes.txt"
+    f = open(config.data_file_names['notes'], "w+")
+    f.write("Empty Note")
+    f.flush()
+
     start_listening(config)
 
     toggle_csi(config, "1")

@@ -10,12 +10,13 @@ if [ -e "$sda1" ]; then
 	previous_status=$(cat $status_file)
 	if [ "$previous_status" = "usb_unmounted" ]; then
 		DATA_DIR="$(curl -s 'http://localhost:8080/data-directory')"
+		EXPERIMENT_NAME="$(curl -s 'http://localhost:8080/experiment-name')"
 		NEW_DIR="$(echo $DATA_DIR | awk -F/ '{print $7}')"
 		sudo mount /dev/sda1
 
-		name=$(cat /home/pi/CSI-Pi/name.txt)
-		time=$(date +%s)
-		sleep 1 && mkdir -p "/home/pi/CSI-Pi/usb_data_dump/CSI-Pi/$name/$time" && cp -r $DATA_DIR "/home/pi/CSI-Pi/usb_data_dump/CSI-Pi/$name/$time/$NEW_DIR" & 
+		DEVICE_NAME=$(cat /home/pi/CSI-Pi/name.txt)
+		TIME=$(date +%s)
+		sleep 1 && mkdir -p "/home/pi/CSI-Pi/usb_data_dump/CSI-Pi/$DEVICE_NAME/$EXPERIMENT_NAME/$TIME" && cp -r $DATA_DIR "/home/pi/CSI-Pi/usb_data_dump/CSI-Pi/$DEVICE_NAME/$EXPERIMENT_NAME/$TIME/$NEW_DIR" &
 		pid=$!
 
 		while ps -p $pid >/dev/null

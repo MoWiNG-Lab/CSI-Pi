@@ -55,9 +55,12 @@ def setup_app(config: Config):
     config.data_file_names['annotations'].flush()
 
     # Add file for experiment_name
+    import datetime
+    now = datetime.datetime.today()
+    now_str = f"{now.year}_{now.month}_{now.day}__{now.hour}_{now.minute}_{now.second}"
     config.data_file_names['experiment_name'] = config.data_dir + "experiment_name.txt"
     f = open(config.data_file_names['experiment_name'], "w+")
-    f.write("default-experiment-name")
+    f.write(f"default_experiment_name__{now_str}")
     f.flush()
 
     # Add file for notes

@@ -68,7 +68,9 @@ class Controller:
 
         with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for f in os.listdir(file_path):
-                if f != 'annotations.csv':
+                if f in ['notes.txt', 'experiment_name.txt']:
+                    zipf.write(os.path.join(file_path, f), f)
+                elif f != 'annotations.csv':
                     d = f.replace(".csv", "")
                     zipf.write(os.path.join(file_path, f), f"{d}/{f}")
                     zipf.write(os.path.join(file_path, 'annotations.csv'), f"{d}/annotations.csv")

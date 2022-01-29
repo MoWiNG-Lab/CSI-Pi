@@ -86,7 +86,7 @@ Device: {{ dev.device_name }}
 Application: {{ dev.application }}
 Channel: {{ dev.wifi_channel }}
 Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz
-File Size: {{ dev.files_size }} bytes</pre>
+File Size: {{ dev.files_size }} bytes ({{ format_file_size(dev.files_size) }})</pre>
         <pre class="horizontal_scrollable" v-if="dev.most_recent_csi.samples.length > 0">
 Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(",").slice(-2, -1)[0]).slice(-2,-1).map(x => new Date(parseFloat(x)))[0] }}
 
@@ -217,6 +217,15 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                             this.data_dir = response.data;
                         });
                 },
+                format_file_size(size) {
+                    if (size > 1e9) {
+                        return (size / 1e9).toFixed(1) + " GBs"
+                    }
+                    if (size > 1e6) {
+                        return (size / 1e6).toFixed(1) + " MBs"
+                    }
+                    return (size / 1e3).toFixed(1) + " kBs"
+                }
             },
             mounted() {
                 this.reload()

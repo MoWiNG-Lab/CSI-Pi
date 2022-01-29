@@ -6,23 +6,12 @@ import zipfile
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
 
 from src.csi_pi.config import Config
-from src.csi_pi.helpers import toggle_csi
+from src.csi_pi.helpers import toggle_csi, load_from_file
 
 
 class Controller:
     def __init__(self, config: Config):
         self.config = config
-
-    @staticmethod
-    def load_from_file(file_name):
-        output = ""
-
-        if os.path.exists(file_name):
-            f = open(file_name, 'r')
-            output = f.read()
-            f.close()
-
-        return output
 
     async def index(self, request):
         return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/resources/html/index.html').read())
@@ -42,7 +31,7 @@ class Controller:
 
     async def get_annotation_metrics(self, request):
         return PlainTextResponse(json.dumps({
-            'data': self.load_from_file(self.config.data_file_names['annotations'].name)
+            'data': load_from_file(self.config.data_file_names['annotations'].name)
         }))
 
     async def get_device_list(self, request):
@@ -53,8 +42,8 @@ class Controller:
         return PlainTextResponse(json.dumps({
             'device_name': device_name,
             'file': self.config.data_file_names[device_name],
-            'application': self.load_from_file(f'/tmp/application/{device_name}'),
-            'wifi_channel': self.load_from_file(f'/tmp/wifi_channel/{device_name}'),
+            'application': load_from_file(f'/tmp/application/{device_name}'),
+            'wifi_channel': load_from_file(f'/tmp/wifi_channel/{device_name}'),
             'data_rate': os.popen(f'tail -n 60 /tmp/data_rates/{device_name}').read(),
             'files_size': os.path.getsize(self.config.data_file_names[device_name]),
             'most_recent_csi': {
@@ -86,20 +75,20 @@ class Controller:
         return PlainTextResponse("OK")
 
     async def get_experiment_name(self, request):
-        experiment_name = self.load_from_file(self.config.data_file_names['experiment_name'])
+        experiment_name = load_from_file(self.config.data_file_names['experiment_name'])
         return PlainTextResponse(experiment_name)
 
     async def get_notes(self, request):
-        experiment_name = self.load_from_file(self.config.data_file_names['notes'])
+        experiment_name = load_from_file(self.config.data_file_names['notes'])
         return PlainTextResponse(experiment_name)
 
     async def set_experiment_name(self, request):
         form = await request.json()
-        new_experiment_name = form['name']
+        new_experiment_name = form['name'].replace(',', '')
 
-        f = open(self.config.data_file_names['experiment_name'], "w+")
+        f = open(self.config.data_file_names['experiment_name'], 'w+')
         f.truncate(0)
-        f.write(new_experiment_name + "\n")
+        f.write(new_experiment_name)
         f.flush()
 
         return PlainTextResponse(new_experiment_name)

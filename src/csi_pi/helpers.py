@@ -25,8 +25,12 @@ def start_listening(config: Config):
         config.data_file_names[d] = f"{config.data_dir}{d.split('/')[-1]}.csv"
 
         # Start listening for device, write data to file, and record data rate
-        subprocess.Popen(f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {d} {config.data_file_names[d]}".split(" "),
-                         stdout=subprocess.PIPE, preexec_fn=os.setsid)
+        subprocess.Popen(
+            f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {d} {config.data_file_names[d]} {config.data_file_names['experiment_name']}".split(" "),
+            env={
+                'PYTHONPATH': os.environ.get('PYTHONPATH', '') + f":{config.app_dir},",
+            },
+            stdout=subprocess.PIPE, preexec_fn=os.setsid)
 
 
 def stop_listening(config: Config):
@@ -65,6 +69,17 @@ def setup_app(config: Config):
     start_listening(config)
 
     toggle_csi(config, "1")
+
+
+def load_from_file(file_name):
+    output = ""
+
+    if os.path.exists(file_name):
+        f = open(file_name, 'r')
+        output = f.read()
+        f.close()
+
+    return output
 
 
 def toggle_csi(config: Config, value):

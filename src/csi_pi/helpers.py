@@ -75,7 +75,7 @@ def setup_app(config: Config):
     # Add file for experiment_name
     import datetime
     now = datetime.datetime.today()
-    now_str = f"{now.year}_{now.month}_{now.day}__{now.hour}_{now.minute}_{now.second}"
+    now_str = f"{now.year}_{now.month}_{now.day}__{now.hour:02}_{now.minute:02}_{now.second:02}"
     config.data_file_names['experiment_name'] = config.data_dir + "experiment_name.txt"
     f = open(config.data_file_names['experiment_name'], "w+")
     f.write(f"default_experiment_name__{now_str}")

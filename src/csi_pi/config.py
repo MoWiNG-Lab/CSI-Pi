@@ -10,5 +10,5 @@ class Config:
     WRITE_CSI_LOCK = '/tmp/lock.write_csi.txt'
     data_dir = f"{app_dir}/storage/data/{time()}/"
     data_file_names = {}
-    devices = None
+    devices = []
     is_listening = False

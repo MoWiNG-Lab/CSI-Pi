@@ -35,11 +35,18 @@ class Controller:
         }))
 
     async def get_device_list(self, request):
-        return PlainTextResponse(json.dumps(self.config.devices))
+        return PlainTextResponse(json.dumps([d.device_path for d in self.config.devices]))
 
     async def get_device_metrics(self, request):
         device_name = request.query_params['device_name']
+
+        if device_name not in [d.device_path for d in self.config.devices]:
+            return PlainTextResponse(json.dumps({
+                'status': 'DEVICE_DISCONNECTED'
+            }))
+
         return PlainTextResponse(json.dumps({
+            'status': 'OK',
             'device_name': device_name,
             'file': self.config.data_file_names[device_name],
             'application': load_from_file(f'/tmp/application/{device_name}'),

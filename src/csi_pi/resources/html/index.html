@@ -31,6 +31,7 @@
             max-width: 400px;
             margin: 20px 40px 20px 0;
             border-radius: 2px;
+            vertical-align: top;
         }
 
         .device_block .horizontal_scrollable {
@@ -59,12 +60,11 @@ CSI Pi, Steven M. Hernandez
 </pre>
 <div v-if="false">Loading...</div>
 <div v-cloak>
-<pre style='white-space: pre-wrap;'>
+<pre>
 
 ---------
-DATA_DIR: {{data_dir}}
-TEST_DEBUG: {{ device_loaded }}
-</pre>
+DATA_DIR: {{data_dir}}</pre>
+<pre>TEST_DEBUG: {{ device_loaded }}</pre>
 EXPERIMENT_NAME:
 <br>
 <input type="text" v-model="experiment_name">
@@ -76,7 +76,7 @@ NOTES:
 ---------
 
 ---------
-Devices:
+Devices (Count: {{ device_list.length }}):
 
 </pre>
     <div v-for="dev in devices" :key="dev.device_name" style='white-space: pre-wrap;' class="device_block">
@@ -125,6 +125,7 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                     annotations_data: "",
                     notes: "",
                     experiment_name: "",
+                    device_list: [],
                     chartOptions: {
                         chart: {
                             id: 'realtime',
@@ -186,32 +187,46 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                         .then(response => {
                             self.notes = response.data
                         })
-                    axios.get("/device-list")
-                        .then(response => {
-                            response.data.forEach(device_name => {
-                                function load_device_metrics() {
-                                    axios.get("/device-metrics?device_name=" + device_name)
-                                        .then(response => {
-                                            self.devices[device_name] = response.data;
-                                            self.device_loaded = response.data.device_name + " : " + Math.random();  // TODO: Figure out why this is required..
-                                            setTimeout(load_device_metrics, 1000);
-                                        });
 
-                                }
+                    function load_device_list() {
+                        axios.get("/device-list")
+                            .then(response => {
+                                new_device_list = response.data;
 
-                                load_device_metrics()
+                                // Remove disconnected devices
+                                Object.keys(self.devices).forEach(k => {
+                                    if (new_device_list.indexOf(k) == -1) {
+                                        delete self.devices[k]
+                                    }
+                                })
+
+                                // Add newly connected devices
+                                self.device_list = new_device_list;
                             });
-                        });
+                    }
+
+                    function load_device_metrics() {
+                        self.device_list.forEach(device_name => {
+                            axios.get("/device-metrics?device_name=" + device_name)
+                                .then(response => {
+                                    if (response.data.status === 'OK') {
+                                        self.devices[device_name] = response.data;
+                                        self.device_loaded = response.data.device_name + " : " + Math.random();  // TODO: Figure out why this is required..
+                                    }
+                                });
+                        })
+                    }
 
                     function load_annotation_metrics() {
                         axios.get("/annotation-metrics")
                             .then(response => {
                                 this.annotations_data = response.data.data;
-                                setTimeout(load_annotation_metrics, 10000);
                             });
                     }
 
-                    load_annotation_metrics()
+                    setInterval(load_device_list, 1000)
+                    setInterval(load_device_metrics, 1000)
+                    setInterval(load_annotation_metrics, 1000)
 
                     axios.get("/data-directory")
                         .then(response => {

@@ -4,33 +4,51 @@ import psutil
 
 from src.csi_pi.config import Config
 
+class Device:
+    process = None
 
-def start_listening(config: Config):
-    if config.is_listening:
-        return False
+    def __init__(self, device_path):
+        self.device_path = device_path
 
-    print("Start Listening")
-    config.is_listening = True
-
-    # Identify all connected devices
-    config.devices = sorted(["/dev/" + d for d in os.listdir("/dev") if "ttyUSB" in d])
-    print("Got devices", config.devices)
-
-    # Start listening for devices and write data to file automatically
-    print("Start listening for devices")
-    for i, d in enumerate(config.devices):
-        # Set baud rate
-        subprocess.Popen(f"/bin/stty -F {d} 921600".split(" "), stdout=subprocess.PIPE)
-
-        config.data_file_names[d] = f"{config.data_dir}{d.split('/')[-1]}.csv"
-
-        # Start listening for device, write data to file, and record data rate
-        subprocess.Popen(
-            f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {d} {config.data_file_names[d]} {config.data_file_names['experiment_name']}".split(" "),
+    def start_listening(self, config):
+        subprocess.Popen(f"/bin/stty -F {self.device_path} 921600".split(" "), stdout=subprocess.PIPE)
+        p = subprocess.Popen(
+            f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {self.device_path} {config.data_file_names[self.device_path]} {config.data_file_names['experiment_name']}".split(" "),
             env={
                 'PYTHONPATH': os.environ.get('PYTHONPATH', '') + f":{config.app_dir},",
             },
             stdout=subprocess.PIPE, preexec_fn=os.setsid)
+        self.process = p
+
+    def stop_listening(self, config):
+        if self.process and self.process.pid:
+            psutil.Process(self.process.pid).kill()
+
+
+
+def start_listening(config: Config):
+    config.is_listening = True
+
+    # Identify all connected devices
+    currently_connected_devices = sorted(["/dev/" + d for d in os.listdir("/dev") if "ttyUSB" in d])
+
+    # Remove newly disconnected devices
+    for d in config.devices:
+        if d.device_path not in currently_connected_devices:
+            print("Device no longer detected:", d.device_path)
+            print("Removing device from list.")
+            del config.data_file_names[d.device_path]
+            d.stop_listening(config)
+            config.devices.remove(d)
+
+    # Add newly discovered devices
+    for i, device_path in enumerate(currently_connected_devices):
+        if device_path not in [d.device_path for d in config.devices]:
+            print("New device detected:", device_path)
+            device = Device(device_path=device_path)
+            config.data_file_names[device_path] = f"{config.data_dir}{device_path.split('/')[-1]}.csv"
+            device.start_listening(config)
+            config.devices.append(device)
 
 
 def stop_listening(config: Config):
@@ -68,8 +86,6 @@ def setup_app(config: Config):
     f = open(config.data_file_names['notes'], "w+")
     f.write("Empty Note")
     f.flush()
-
-    start_listening(config)
 
     toggle_csi(config, "1")
 

@@ -109,6 +109,7 @@ if __name__ == "__main__":
     experiment_name_file_path = sys.argv[3]
 
     # Setup Directories for metric files
+    os.makedirs("/tmp/debug/dev/", exist_ok=True)
     os.makedirs("/tmp/data_rates/dev/", exist_ok=True)
     os.makedirs("/tmp/wifi_channel/dev/", exist_ok=True)
     os.makedirs("/tmp/application/dev/", exist_ok=True)

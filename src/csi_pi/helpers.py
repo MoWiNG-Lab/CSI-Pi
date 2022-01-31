@@ -18,7 +18,9 @@ class Device:
             env={
                 'PYTHONPATH': os.environ.get('PYTHONPATH', '') + f":{config.app_dir},",
             },
-            stdout=subprocess.PIPE, preexec_fn=os.setsid)
+            stdout=subprocess.DEVNULL,
+            preexec_fn=os.setsid
+        )
         self.process = p
 
     def stop_listening(self, config):

@@ -1,6 +1,7 @@
 import os
 import sys
 import math
+import datetime
 import serial
 from time import time
 from src.csi_pi.helpers import load_from_file
@@ -19,6 +20,7 @@ class ReadLine:
     wifi_channel = None
     application = None
     experiment_name_set_at = 0
+    debug_log = None
 
     def __init__(self, s, tty_full_path, experiment_name_file_path):
         self.buf = bytearray()
@@ -26,6 +28,13 @@ class ReadLine:
         self.tty_full_path = tty_full_path
         self.experiment_name_file_path = experiment_name_file_path
         self.experiment_name = self.get_experiment_name()
+        self.debug_log = open(f"/tmp/debug{self.tty_full_path}", "a+")
+
+    def debug(self, line):
+        now = datetime.datetime.today()
+        now_str = f"{now.year}-{now.month}-{now.day} {now.hour:02}:{now.minute:02}:{now.second:02}"
+        self.debug_log.write(f"{now_str} :: {line}\n")
+        self.debug_log.flush()
 
     def get_experiment_name(self):
         if self.experiment_name_set_at < os.path.getmtime(self.experiment_name_file_path):
@@ -94,13 +103,10 @@ class ReadLine:
 
 
 if __name__ == "__main__":
+    # Parse command arguments
     tty_full_path = sys.argv[1]
     tty_save_path = sys.argv[2]
     experiment_name_file_path = sys.argv[3]
-
-    ser = serial.Serial(tty_full_path, 921600, timeout=0.1)
-    f = open(tty_save_path, "a")
-    rl = ReadLine(ser, tty_full_path, experiment_name_file_path)
 
     # Setup Directories for metric files
     os.makedirs("/tmp/data_rates/dev/", exist_ok=True)
@@ -109,11 +115,24 @@ if __name__ == "__main__":
 
     # Clear metric files from previous sessions
     open(f"/tmp/data_rates{tty_full_path}", "w").close()
+    open(f"/tmp/debug{tty_full_path}", "w").close()
 
     while True:
-        try:
-            # LOOP for each PRINTABLE unit
-            csi_line = rl.readline()
-            f.write(csi_line + "\n")
-        except Exception as e:
-            print("Exception: ", e)
+        # Setup serial connection
+        ser = serial.Serial(tty_full_path, 921600, timeout=0.1)
+        f = open(tty_save_path, "a")
+        rl = ReadLine(ser, tty_full_path, experiment_name_file_path)
+
+        # Read incoming serial data
+        rl.debug(f"Read incoming serial data")
+        while True:
+            try:
+                csi_line = rl.readline()
+                f.write(f"{csi_line}\n")
+            except Exception as e:
+                # Exception occurred, reset the serial connection
+                rl.debug(f"Exception in tty_listener.py: {e}")
+                break
+
+        # Close the serial connection
+        ser.close()

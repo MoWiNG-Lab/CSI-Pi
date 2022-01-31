@@ -1,6 +1,7 @@
 import os
 import subprocess
 import psutil
+import datetime
 
 from src.csi_pi.config import Config
 
@@ -73,7 +74,6 @@ def setup_app(config: Config):
     config.data_file_names['annotations'].flush()
 
     # Add file for experiment_name
-    import datetime
     now = datetime.datetime.today()
     now_str = f"{now.year}_{now.month}_{now.day}__{now.hour:02}_{now.minute:02}_{now.second:02}"
     config.data_file_names['experiment_name'] = config.data_dir + "experiment_name.txt"

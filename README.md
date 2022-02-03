@@ -151,7 +151,7 @@ Edit your crontab with `crontab -e` and add the following lines:
 
 ```
 CSI_PI_WEBHOOK='https://discord.com/api/webhooks/123123123/abc123123abc'
-0 * * * *  /usr/bin/curl --location --request POST $CSI_PI_WEBHOOK --form "content=\"$(/bin/sh /home/pi/CSI-Pi/src/shell/daily_stats.sh)\""
+0 * * * *  /usr/bin/curl --location --request POST $CSI_PI_WEBHOOK --form "content=\"$(/usr/bin/python3 /home/pi/CSI-Pi/src/stats/daily_stats.py)\""
 ```
 
 ## Common Issues

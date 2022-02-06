@@ -86,26 +86,11 @@ curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_down'
 curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_up'
 ```
 
-### Ad-hoc Server Stats
+## Download data as a ZIP file
 
-If you want to view current status from the terminal run the following:
+Open your web browser to `http://<PI_HOSTNAME>.local:8080/data`.
 
-```
-sh src/shell/status.sh
-```
-
-## Watch Server Stats
-
-You can watch the status of the current annotation file and the data rate per connect ESP32 by running the following:
-
-```
-sh src/shell/watch.sh
-```
-
-Notice, if you restart the server, you will have to re-run this script. Otherwise the annotation file will not appear to update. 
-It is recommended that you use the web UI rather than the shell based scripts.
-
-## USB Flash Drive Auto-backup
+## Download data to a USB Flash Drive
 
 Data is stored on the device, but this does not give us an easy way to collect data from the Raspberry Pi. One method is to mount a usb flash drive to save the files. To achieve, this we need to first setup auto-mount:
 

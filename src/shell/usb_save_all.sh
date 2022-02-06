@@ -1,7 +1,7 @@
 #
 # Copy all new files from the data-directory to a USB flash drive.
 # If this is a new flash drive ALL PREVIOUS EXPERIMENTS will be copied to the device.
-# This may take a bit of time to complete.
+# This may take a long time to complete.
 #
 # Usage:
 #       cd /home/pi/CSI-Pi  # This is required because we use relative paths in this script.

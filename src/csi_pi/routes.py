@@ -16,14 +16,14 @@ def get_routes(controller: Controller):
         Route("/annotation", controller.new_annotation, methods=['POST']),
         Route("/power_up", controller.power_up, methods=['POST']),
         Route("/power_down", controller.power_down, methods=['POST']),
-        Route("/experiment-name", controller.get_experiment_name),
-        Route("/experiment-name", controller.set_experiment_name, methods=['POST']),
-        Route("/notes", controller.get_notes),
-        Route("/notes", controller.set_notes, methods=['POST']),
 
         # API
         Route("/data-directory", controller.get_data_directory),
         Route("/annotation-metrics", controller.get_annotation_metrics),
         Route("/device-list", controller.get_device_list),
         Route("/device-metrics", controller.get_device_metrics),
+        Route("/experiment-name", controller.get_experiment_name),
+        Route("/experiment-name", controller.set_experiment_name, methods=['POST']),
+        Route("/notes", controller.get_notes),
+        Route("/notes", controller.set_notes, methods=['POST']),
     ]

@@ -12,7 +12,7 @@ Afterwards, from the Raspberry Pi terminal, run the following commands:
 
 ```
 # Install project dependencies
-sudo apt-get install git python3-pip pv tmux libgirepository1.0-dev
+sudo apt-get install git python3-pip pv tmux libgirepository1.0-dev libcairo2
 
 # Download CSI-Pi from github
 git clone https://github.com/StevenMHernandez/CSI-Pi.git
@@ -31,12 +31,15 @@ sudo dpkg-reconfigure tzdata
 
 # Set the name for the deployment location
 echo "example_location_name" > ./name.txt
+
+# Copy config variables. Edit this file as you see fit
+cp .env.example .env
 ```
 
 ## Run Server
 
 ```
-uvicorn src.csi_pi.app:app --host 0.0.0.0 --port 8080
+/home/pi/.local/bin/uvicorn src.csi_pi.app:app --host 0.0.0.0 --port 8080
 ```
 
 **Note**: a better way to handle this is to automatically run this script on boot. Then you will not need to SSH to start recording. To do this, see **"Run on startup"** below.

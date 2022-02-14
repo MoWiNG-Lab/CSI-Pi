@@ -12,7 +12,7 @@ Afterwards, from the Raspberry Pi terminal, run the following commands:
 
 ```
 # Install project dependencies
-sudo apt-get install git python3-pip pv tmux libgirepository1.0-dev libcairo2
+sudo apt-get install git python3-pip pv tmux libgirepository1.0-dev libcairo2-dev vim -y
 
 # Download CSI-Pi from github
 git clone https://github.com/StevenMHernandez/CSI-Pi.git

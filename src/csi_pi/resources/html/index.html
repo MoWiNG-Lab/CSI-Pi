@@ -98,6 +98,7 @@ Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(
 
 ---------
 annotations.csv
+Number of Annotations: {{ annotations_data.split("\n").filter(row => row.indexOf("CURRENT_ACTION") >= 0).length }}
 Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")[2]).slice(-2, -1).map(x => new Date(parseInt(x)))[0] }}
 ---------
 

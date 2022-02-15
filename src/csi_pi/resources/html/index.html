@@ -63,7 +63,8 @@ CSI Pi, Steven M. Hernandez
 <pre>
 
 ---------
-DATA_DIR: {{data_dir}}</pre>
+DATA_DIR: {{ server_stats.data_directory }}</pre>
+STORAGE_USED: {{ format_file_size(server_stats.storage.used)  }} of {{ format_file_size(server_stats.storage.total) }} ({{ (server_stats.storage.used / server_stats.storage.total * 100).toFixed(1) }}%)
 <pre>TEST_DEBUG: {{ device_loaded }}</pre>
 EXPERIMENT_NAME:
 <br>
@@ -121,10 +122,16 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
             data() {
                 return {
                     device_loaded: "",
-                    data_dir: "",
                     devices: {},
                     data_rates: {},
                     annotations_data: "",
+                    server_stats: {
+                        data_directory: '',
+                        storage: {
+                            'used': 0,
+                            'total': 0,
+                        }
+                    },
                     notes: "",
                     experiment_name: "",
                     device_list: [],
@@ -226,14 +233,17 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                             });
                     }
 
+                    function load_server_stats() {
+                        axios.get("/server-stats")
+                            .then(response => {
+                                self.server_stats = response.data;
+                            });
+                    }
+
                     setInterval(load_device_list, 1000)
                     setInterval(load_device_metrics, 1000)
                     setInterval(load_annotation_metrics, 1000)
-
-                    axios.get("/data-directory")
-                        .then(response => {
-                            this.data_dir = response.data;
-                        });
+                    setInterval(load_server_stats, 1000)
                 },
                 format_file_size(size) {
                     if (size > 1e9) {

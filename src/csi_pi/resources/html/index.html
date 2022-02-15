@@ -101,7 +101,8 @@ annotations.csv
 Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")[2]).slice(-2, -1).map(x => new Date(parseInt(x)))[0] }}
 ---------
 
-{{ annotations_data }}
+{{ annotations_data.split("\n")[0] }}
+{{ annotations_data.split("\n").reverse().join("\n") }}
 </pre>
 </div>
 </div>

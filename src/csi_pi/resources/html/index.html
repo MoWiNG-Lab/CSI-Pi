@@ -65,7 +65,6 @@ CSI Pi, Steven M. Hernandez
 ---------
 DATA_DIR: {{ server_stats.data_directory }}</pre>
 STORAGE_USED: {{ format_file_size(server_stats.storage.used)  }} of {{ format_file_size(server_stats.storage.total) }} ({{ (server_stats.storage.used / server_stats.storage.total * 100).toFixed(1) }}%)
-<pre>TEST_DEBUG: {{ device_loaded }}</pre>
 EXPERIMENT_NAME:
 <br>
 <input type="text" v-model="experiment_name">
@@ -220,7 +219,6 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                                 .then(response => {
                                     if (response.data.status === 'OK') {
                                         self.devices[device_name] = response.data;
-                                        self.device_loaded = response.data.device_name + " : " + Math.random();  // TODO: Figure out why this is required..
                                     }
                                 });
                         })

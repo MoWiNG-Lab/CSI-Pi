@@ -18,6 +18,7 @@ def get_routes(controller: Controller):
         Route("/power_down", controller.power_down, methods=['POST']),
 
         # API
+        Route("/server-stats", controller.get_server_stats),
         Route("/data-directory", controller.get_data_directory),
         Route("/annotation-metrics", controller.get_annotation_metrics),
         Route("/device-list", controller.get_device_list),

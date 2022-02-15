@@ -2,6 +2,7 @@ import os
 import json
 from time import time
 import zipfile
+import shutil
 
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
 
@@ -25,6 +26,15 @@ class Controller:
         ])) + "\n")
         self.config.data_file_names['annotations'].flush()
         return PlainTextResponse("OK")
+
+    async def get_server_stats(self, request):
+        return PlainTextResponse(json.dumps({
+            'data_directory': self.config.data_dir,
+            'storage': {
+                'used': shutil.disk_usage("/").used,
+                'total': shutil.disk_usage("/").total,
+            }
+        }))
 
     async def get_data_directory(self, request):
         return PlainTextResponse(self.config.data_dir)

@@ -220,7 +220,7 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                     function load_annotation_metrics() {
                         axios.get("/annotation-metrics")
                             .then(response => {
-                                this.annotations_data = response.data.data;
+                                self.annotations_data = response.data.data;
                             });
                     }
 

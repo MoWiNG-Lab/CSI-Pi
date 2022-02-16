@@ -12,7 +12,7 @@ class Device:
         self.device_path = device_path
 
     def start_listening(self, config):
-        subprocess.Popen(f"/bin/stty -F {self.device_path} 921600".split(" "), stdout=subprocess.PIPE)
+        subprocess.Popen(f"/bin/stty -F {self.device_path} {config.esp32_baud_rate}".split(" "), stdout=subprocess.PIPE)
         p = subprocess.Popen(
             f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {self.device_path} {config.data_file_names[self.device_path]} {config.data_file_names['experiment_name']}".split(" "),
             env={

@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.dirname(__file__) + "/../../")
+from src.csi_pi.config import Config
 
 l = os.environ.get('TTY_PLUGINS', "src.csi_pi.tty_plugins.csi_data_plugin").strip().split("\n")
 print(l)
@@ -75,6 +76,8 @@ if __name__ == "__main__":
     tty_save_path = sys.argv[2]
     experiment_name_file_path = sys.argv[3]
 
+    config = Config()
+
     tty_plugins = [
         fn(tty_full_path, tty_save_path, experiment_name_file_path)
         for fn in tty_plugins
@@ -88,7 +91,7 @@ if __name__ == "__main__":
 
     while True:
         # Setup serial connection
-        ser = serial.Serial(tty_full_path, 921600, timeout=0.1)
+        ser = serial.Serial(tty_full_path, config.esp32_baud_rate, timeout=0.1)
 
         rl = ReadLine(ser, tty_full_path)
 

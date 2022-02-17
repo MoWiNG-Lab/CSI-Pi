@@ -6,18 +6,10 @@ import serial
 from time import time
 from importlib import import_module
 
-from dotenv import load_dotenv
-load_dotenv()
-
 sys.path.append(os.path.dirname(__file__) + "/../../")
 from src.csi_pi.config import Config
 
-l = os.environ.get('TTY_PLUGINS', "src.csi_pi.tty_plugins.csi_data_plugin").strip().split("\n")
-print(l)
-tty_plugins = [
-    getattr(import_module(s), "get_object")
-    for s in l
-]
+tty_plugins = []
 current_stats_second = 0
 
 # @See: https://github.com/pyserial/pyserial/issues/216#issuecomment-369414522
@@ -79,8 +71,8 @@ if __name__ == "__main__":
     config = Config()
 
     tty_plugins = [
-        fn(tty_full_path, tty_save_path, experiment_name_file_path)
-        for fn in tty_plugins
+        getattr(import_module(s), "get_object")(tty_full_path, tty_save_path, experiment_name_file_path)
+        for s in config.tty_plugins
     ]
 
     # Setup Directories for metric files

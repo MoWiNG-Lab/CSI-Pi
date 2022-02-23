@@ -10,7 +10,7 @@ def start_listening(config: Config):
     config.is_listening = True
 
     # Identify all connected devices
-    currently_connected_devices = sorted(["/dev/" + d for d in os.listdir("/dev") if "ttyUSB" in d])
+    currently_connected_devices = Device.get_currently_connected_devices()
 
     # Remove newly disconnected devices
     for d in config.devices:

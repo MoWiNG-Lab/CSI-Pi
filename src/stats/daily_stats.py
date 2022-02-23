@@ -4,6 +4,8 @@ import requests
 import shutil
 from time import time
 
+from src.csi_pi.device import Device
+
 
 def format_file_size(file_size):
     if file_size > 1e9:
@@ -16,7 +18,7 @@ def format_file_size(file_size):
     return file_size
 
 curr_time_seconds = math.floor(time())
-currently_connected_devices = sorted(["/dev/" + d for d in os.listdir("/dev") if "ttyUSB" in d])
+currently_connected_devices = Device.get_currently_connected_devices()
 for tty_full_path in currently_connected_devices:
     try:
         with open(f"/tmp/data_rates{tty_full_path}", "r") as f:

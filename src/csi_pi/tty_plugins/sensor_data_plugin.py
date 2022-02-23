@@ -20,7 +20,7 @@ class SensorDataTTYPlugin:
 
     def prefix_string(self):
         """
-        For each incoming line from `/dev/ttyUSB*` we will look for the following prefix-string.
+        For each incoming line from our devices we will look for the following prefix-string.
         If the line starts with this string, then we will call `process(line)`.
         :return: str
         """

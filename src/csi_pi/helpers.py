@@ -1,32 +1,9 @@
 import os
-import subprocess
 import psutil
 import datetime
 
 from src.csi_pi.config import Config
-
-class Device:
-    process = None
-
-    def __init__(self, device_path):
-        self.device_path = device_path
-
-    def start_listening(self, config):
-        subprocess.Popen(f"/bin/stty -F {self.device_path} {config.esp32_baud_rate}".split(" "), stdout=subprocess.PIPE)
-        p = subprocess.Popen(
-            f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {self.device_path} {config.data_file_names[self.device_path]} {config.data_file_names['experiment_name']}".split(" "),
-            env={
-                'PYTHONPATH': os.environ.get('PYTHONPATH', '') + f":{config.app_dir},",
-            },
-            stdout=subprocess.DEVNULL,
-            preexec_fn=os.setsid
-        )
-        self.process = p
-
-    def stop_listening(self, config):
-        if self.process and self.process.pid:
-            psutil.Process(self.process.pid).kill()
-
+from src.csi_pi.device import Device
 
 
 def start_listening(config: Config):

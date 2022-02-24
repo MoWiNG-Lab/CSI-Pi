@@ -1,5 +1,7 @@
+import sys
 import requests
 from pynput import keyboard
+from urllib3.exceptions import MaxRetryError, NewConnectionError
 
 
 def key_press(key):
@@ -49,8 +51,15 @@ if __name__ == '__main__':
         # put CURL request: "curl --location --request POST \
         #                   'http://<PI_HOSTNAME>.local:8080/annotation?value=<ACTION_OR_MEASUREMENT_VALUE>'"
         params = (('value', className),)
-        response = requests.post('http://0.0.0.0:8080/annotation', params=params)  # Any better way to specify the host?
-        if response.status_code == 200:
+        try:
+            response = requests.post('http://0.0.0.0:8080/annotation', params=params)  # better way to specify the host?
+        except (ConnectionError, ConnectionRefusedError, NewConnectionError, MaxRetryError, Exception) as err:
+            response = None
+            sys.stderr.write(str(err) + "\n")
+            pass
+        if response is not None and response.status_code == 200:
             print("Successfully posted action to the CSI-Pi service. Collecting data for action `", className, "`...\n")
         else:
-            print("Bad Service! Code: ", response.status_code, "\nResponse: ", response.text)
+            sys.stderr.write("Bad Service!\nResponse Code: "
+                             + str(response.status_code if response is not None else "NULL")
+                             + "\nResponse: " + str(response.text if response is not None else "NULL\n"))

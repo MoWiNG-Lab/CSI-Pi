@@ -11,7 +11,12 @@ class Device:
 
     @staticmethod
     def get_currently_connected_devices():
-        return sorted(["/dev/" + d for d in os.listdir("/dev") if "ttyUSB" in d])
+        devices = []
+        for d in os.listdir("/dev"):
+            for type in ['ttyUSB', 'ttyACM']:
+                if type in d:
+                    devices.append("/dev/" + d)
+        return sorted(devices)
 
     def start_listening(self, config):
         """

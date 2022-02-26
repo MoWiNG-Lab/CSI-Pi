@@ -1,62 +1,97 @@
+import time
 from sys import stderr
 
 import requests
-import time
 from pynput import keyboard
 from urllib3.exceptions import NewConnectionError, MaxRetryError
 
-ACTION_DURATION_SECONDS = 30
-TRANSITION_DURATION = 10
-IS_TO_COUNT_FLAG = True
+ACTION_DURATION_SECONDS = 5
+TRANSITION_DURATION_SECONDS = 3
+IS_TO_PAUSE_IN_REST = False
+TO_END_PROGRAM = False
+IGNORED_CLASS_LABEL = "none"
 CLASSES = ["THUMB", "INDEX", "MIDDLE", "RING", "LITTLE",
-           "THUMB_INDEX", "THUMB_LITTLE", "THUMB_RING_LITTLE_V_SIGN",
-           "INDEX_MIDDLE_RING_LITTLE", "FIST", "THUMB_UP",
+           "THUMB_LITTLE", "THUMB_RING_LITTLE_V_SIGN",  "THUMB_INDEX",
+           "STRAIGHT_STATIC", "FIST", "THUMB_UP",
            "PITCH_PALM", "ROLL_PALM", "YAWN_PALM"]
 
 
 def key_press(key):
+    # NOTE: Only pausing during `NONE` action, since the collected CSI data would be labeled continuously.
     if key == keyboard.Key.esc:
-        global IS_TO_COUNT_FLAG
-        IS_TO_COUNT_FLAG = (not IS_TO_COUNT_FLAG)
-        print("Altered Counter Flag: ", IS_TO_COUNT_FLAG)
-        # return False  # stop listener
-    elif key == keyboard.Key.enter:
-        print("\tPressed ENTER key!\n")
+        global IS_TO_PAUSE_IN_REST
+        IS_TO_PAUSE_IN_REST = (not IS_TO_PAUSE_IN_REST)
+        print("Altered Pause/Resume Flag: ", "RESUMED" if IS_TO_PAUSE_IN_REST else "PAUSED")
+    elif key == keyboard.Key.backspace:
+        global TO_END_PROGRAM
+        TO_END_PROGRAM = True
+        print("\n\n\tEnding program during the next NONE session.\n")
+        return False  # stop listener
+
+
+def post_next_action_label(class_name):
+    params = (('value', class_name),)
+    try:
+        resp = requests.post('http://0.0.0.0:8080/annotation', params=params)  # better way to specify the host?
+    except (ConnectionError, ConnectionRefusedError, NewConnectionError, MaxRetryError, Exception) as err:
+        resp = None
+        stderr.write(str(err) + "\n")
+        pass
+    return resp
+
+
+def print_response(resp, class_name):
+    if resp is not None and resp.status_code == 200:
+        print("Posted NEW action `{:s}` to perform now ...".format(class_name))
+    else:
+        stderr.write("Bad Service!\nResponse Code: "
+                     + str(resp.status_code if resp is not None else "NULL")
+                     + "\nResponse: " + str(resp.text if resp is not None else "NULL\n"))
 
 
 if __name__ == '__main__':
-    # numClasses = int(input("Number of Classes: "))
-    # classLabels = [0] * numClasses
-    # classNames = [""] * numClasses
-    # classDict = {}
-    # for i in range(1, numClasses + 1):
-    #     classLabels[i - 1] = (i % 10) if (i < 11) else (ord('a') + i - 11)
-    #     classNames[i - 1] = input(str(classLabels[i - 1] if (i < 11) else chr(classLabels[i - 1])) + ") ")
-    #     classDict[str(classLabels[i - 1])] = str(classNames[i - 1])
-
+    print("Attaching keyboard listener ...")
     listener = keyboard.Listener(on_press=key_press)
     listener.start()  # start to listen on a separate thread
+    print("\tESC = pause/resume (in resting state only)\n\tBACKSPACE = end program\n\n")
 
-    t = TRANSITION_DURATION
-    minutes, secs = divmod(t, 60)
-    print("Running the count-down for: ", '{:02d}:{:02d}'.format(minutes, secs))
-    while t:
-        minutes, secs = divmod(t, 60)
-        timer = 'Collecting Data for Action: {:02d}) {:s} ->{:02d}:{:02d}'.format(0, CLASSES[0], minutes, secs)
-        print("\r", timer, end="\r")
-        time.sleep(1)
-        t -= 1
+    repetition = 1
+    totalActions = len(CLASSES)
+    currAction = 0
+    className = CLASSES[currAction]
+    while True:
+        t = ACTION_DURATION_SECONDS
+        while t > 0:
+            minutes, secs = divmod(t, 60)
+            # put end='\r' to see the count-down in the same line
+            print('Rep-{:d} #{:d}) {:s} ->{:02d}:{:02d}'.format(repetition, currAction + 1, className, minutes, secs))
+            time.sleep(1)
+            t -= 1
+        print("===============================TIME-UP===============================\n\n")
 
-    params = (('value', className),)
-    try:
-        response = requests.post('http://0.0.0.0:8080/annotation', params=params)  # better way to specify the host?
-    except (ConnectionError, ConnectionRefusedError, NewConnectionError, MaxRetryError, Exception) as err:
-        response = None
-        stderr.write(str(err) + "\n")
-        pass
-    if response is not None and response.status_code == 200:
-        print("Successfully posted action to the CSI-Pi service. Collecting data for action `", className, "`...\n")
-    else:
-        stderr.write("Bad Service!\nResponse Code: "
-                         + str(response.status_code if response is not None else "NULL")
-                         + "\nResponse: " + str(response.text if response is not None else "NULL\n"))
+        currAction = (currAction + 1) % totalActions
+        if currAction == 0:
+            repetition += 1
+        className = CLASSES[currAction]
+        print("\nNEXT action: ", className)
+
+        response = post_next_action_label(IGNORED_CLASS_LABEL)
+        print_response(response, IGNORED_CLASS_LABEL)
+        t = TRANSITION_DURATION_SECONDS
+        while t > 0:
+            time.sleep(1)
+            if TO_END_PROGRAM:
+                break
+            if IS_TO_PAUSE_IN_REST:
+                print("PAUSED! Press ESC to resume ...")
+            else:
+                minutes, secs = divmod(t, 60)
+                print('NONE ==> {:02d}:{:02d}'.format(minutes, secs))
+                t -= 1
+        if TO_END_PROGRAM:
+            break
+        else:
+            print("-------------------------------TIME-UP-------------------------------\n\n")
+
+        response = post_next_action_label(className)
+        print_response(response, className)

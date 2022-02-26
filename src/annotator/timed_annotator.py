@@ -11,7 +11,7 @@ IS_TO_PAUSE_IN_REST = False
 TO_END_PROGRAM = False
 IGNORED_CLASS_LABEL = "none"
 CLASSES = ["THUMB", "INDEX", "MIDDLE", "RING", "LITTLE",
-           "THUMB_LITTLE", "THUMB_RING_LITTLE_V_SIGN",  "THUMB_INDEX",
+           "THUMB_LITTLE", "THUMB_RING_LITTLE_V_SIGN", "THUMB_INDEX",
            "STRAIGHT_STATIC", "FIST", "THUMB_UP",
            "PITCH_PALM", "ROLL_PALM", "YAWN_PALM"]
 
@@ -21,11 +21,10 @@ def key_press(key):
     if key == keyboard.Key.esc:
         global IS_TO_PAUSE_IN_REST
         IS_TO_PAUSE_IN_REST = (not IS_TO_PAUSE_IN_REST)
-        print("Altered Pause/Resume Flag: ", "RESUMED" if IS_TO_PAUSE_IN_REST else "PAUSED")
+        print("Altered Pause/Resume Flag: ", "PAUSED" if IS_TO_PAUSE_IN_REST else "RESUMED")
     elif key == keyboard.Key.backspace:
         global TO_END_PROGRAM
         TO_END_PROGRAM = True
-        print("\n\n\tEnding program during the next NONE session.\n")
         return False  # stop listener
 
 
@@ -58,25 +57,12 @@ if __name__ == '__main__':
     repetition = 1
     totalActions = len(CLASSES)
     currAction = 0
-    className = CLASSES[currAction]
     while True:
-        t = ACTION_DURATION_SECONDS
-        while t > 0:
-            minutes, secs = divmod(t, 60)
-            # put end='\r' to see the count-down in the same line
-            print('Rep-{:d} #{:d}) {:s} ->{:02d}:{:02d}'.format(repetition, currAction + 1, className, minutes, secs))
-            time.sleep(1)
-            t -= 1
-        print("===============================TIME-UP===============================\n\n")
-
-        currAction = (currAction + 1) % totalActions
-        if currAction == 0:
-            repetition += 1
         className = CLASSES[currAction]
-        print("\nNEXT action: ", className)
+        if not TO_END_PROGRAM:
+            print("\nNEXT action: ", className)
 
-        response = post_next_action_label(IGNORED_CLASS_LABEL)
-        print_response(response, IGNORED_CLASS_LABEL)
+        print_response(post_next_action_label(IGNORED_CLASS_LABEL), IGNORED_CLASS_LABEL)
         t = TRANSITION_DURATION_SECONDS
         while t > 0:
             time.sleep(1)
@@ -86,12 +72,26 @@ if __name__ == '__main__':
                 print("PAUSED! Press ESC to resume ...")
             else:
                 minutes, secs = divmod(t, 60)
-                print('NONE ==> {:02d}:{:02d}'.format(minutes, secs))
+                print('\tNONE ==> {:02d}:{:02d}'.format(minutes, secs))
                 t -= 1
         if TO_END_PROGRAM:
             break
         else:
             print("-------------------------------TIME-UP-------------------------------\n\n")
 
-        response = post_next_action_label(className)
-        print_response(response, className)
+        print_response(post_next_action_label(className), className)
+        t = ACTION_DURATION_SECONDS
+        while t > 0:
+            if TO_END_PROGRAM:
+                break
+            minutes, secs = divmod(t, 60)
+            # put end='\r' to see the count-down in the same line
+            print('\tRep-{:d} # {:d}) {:s}  ->  {:02d}:{:02d}'
+                  .format(repetition, currAction + 1, className, minutes, secs))
+            time.sleep(1)
+            t -= 1
+        print("===============================TIME-UP===============================\n\n")
+
+        currAction = (currAction + 1) % totalActions
+        if currAction == 0:
+            repetition += 1

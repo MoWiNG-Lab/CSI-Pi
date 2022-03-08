@@ -34,6 +34,12 @@
             vertical-align: top;
         }
 
+        .device_block.error {
+            background: #111;
+            border: 1px solid #111;
+            color: #fff;
+        }
+
         .device_block .horizontal_scrollable {
             overflow-x: scroll;
             -ms-overflow-style: none; /* IE and Edge */
@@ -65,6 +71,7 @@ CSI Pi, Steven M. Hernandez
 ---------
 DATA_DIR: {{ server_stats.data_directory }}</pre>
 STORAGE_USED: {{ format_file_size(server_stats.storage.used)  }} of {{ format_file_size(server_stats.storage.total) }} ({{ (server_stats.storage.used / server_stats.storage.total * 100).toFixed(1) }}%)
+<br>
 EXPERIMENT_NAME:
 <br>
 <input type="text" v-model="experiment_name">
@@ -79,11 +86,11 @@ NOTES:
 Devices (Count: {{ device_list.length }}):
 
 </pre>
-    <div v-for="dev in devices" :key="dev.device_name" style='white-space: pre-wrap;' class="device_block">
-        <apexchart type="line" height="150" ref="chart" :options="chartOptions"
+    <div v-for="dev in devices" :key="dev.device_name" style='white-space: pre-wrap;' v-bind:class="{'device_block': true, 'error': device_has_error(dev)}">
+        <apexchart type="line" height="150" ref="chart" :options="chart_options(device_has_error(dev))"
                    :series="[{'data': dev.data_rate.split('\n').filter(x => x).map(x => x.split(',')[1]).slice(-60)}]"></apexchart>
-        <pre>
-Device: {{ dev.device_name }}
+<pre v-if="!server_stats.is_csi_enabled" style="color: red">CSI COLLECTION IS CURRENTLY DISABLED</pre>
+<pre>Device: {{ dev.device_name }}
 Application: {{ dev.application }}
 Channel: {{ dev.wifi_channel }}
 Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz
@@ -126,6 +133,7 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                     annotations_data: "",
                     server_stats: {
                         data_directory: '',
+                        is_csi_enabled: true,
                         storage: {
                             'used': 0,
                             'total': 0,
@@ -134,54 +142,6 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                     notes: "",
                     experiment_name: "",
                     device_list: [],
-                    chartOptions: {
-                        chart: {
-                            id: 'realtime',
-                            fontFamily: 'monospace',
-                            height: 150,
-                            type: 'line',
-                            animations: {
-                                enabled: false,
-                            },
-                            toolbar: {
-                                show: false
-                            },
-                            zoom: {
-                                enabled: false
-                            }
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        stroke: {
-                            curve: 'smooth',
-                            colors: ['#000000'],
-                            width: 1,
-                        },
-                        xaxis: {
-                            axisBorder: {
-                                show: false
-                            },
-                            axisTicks: {
-                                show: false
-                            },
-                            labels: {
-                                show: false
-                            },
-                            range: 60,
-                        },
-                        yaxis: {
-                            title: {text: 'Data Rate (Hz)'},
-                            labels: {
-                                style: {
-                                    fontWeight: 100
-                                }
-                            }
-                        },
-                        legend: {
-                            show: false
-                        },
-                    },
                 }
             },
             methods: {
@@ -251,6 +211,72 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                         return (size / 1e6).toFixed(1) + " MBs"
                     }
                     return (size / 1e3).toFixed(1) + " kBs"
+                },
+                chart_options(has_error) {
+                    return {
+                        chart: {
+                            id: 'realtime',
+                            fontFamily: 'monospace',
+                            height: 150,
+                            type: 'line',
+                            animations: {
+                                enabled: false,
+                            },
+                            toolbar: {
+                                show: false
+                            },
+                            zoom: {
+                                enabled: false
+                            }
+                        },
+                        dataLabels: {
+                            enabled: false
+                        },
+                        grid: {
+                            borderColor: has_error ? '#333333' : '#eeeeee',
+                        },
+                        stroke: {
+                            curve: 'smooth',
+                            colors: [
+                                has_error ? '#FFFFFF': '#000000'
+                            ],
+                            width: 1,
+                        },
+                        xaxis: {
+                            axisBorder: {
+                                show: false
+                            },
+                            axisTicks: {
+                                show: false
+                            },
+                            labels: {
+                                show: false
+                            },
+                            range: 60,
+                        },
+                        yaxis: {
+                            title: {
+                                text: 'Data Rate (Hz)',
+                                style: {
+                                    color: has_error ? '#FFFFFF': '#000000',
+                                }
+                            },
+                            labels: {
+                                style: {
+                                    colors: [
+                                        has_error ? '#FFFFFF': '#000000'
+                                    ],
+                                    fontWeight: 100
+                                }
+                            }
+                        },
+                        legend: {
+                            show: false
+                        },
+                    }
+                },
+                device_has_error(device) {
+                    return !this.server_stats.is_csi_enabled;
                 }
             },
             mounted() {

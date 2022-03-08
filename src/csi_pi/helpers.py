@@ -85,6 +85,13 @@ def toggle_csi(config: Config, value):
         f.write(value)
 
 
+def get_is_csi_enabled(config: Config):
+    with open(config.WRITE_CSI_LOCK, 'r') as f:
+        toggle = bool(int(f.read()))
+
+    return toggle
+
+
 def kill_child_processes():
     # When the python process is killed (at exit), clean up all existing child processes)
     pid = os.getpid()

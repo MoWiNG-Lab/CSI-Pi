@@ -1,10 +1,10 @@
 import os
 from time import time
-from src.csi_pi.helpers import load_from_file
+from src.csi_pi.helpers import get_is_csi_enabled, load_from_file
 
 
-def get_object(tty_full_path, tty_save_path, experiment_name_file_path):
-    return CSIDataTTYPlugin(tty_full_path, tty_save_path, experiment_name_file_path)
+def get_object(tty_full_path, tty_save_path, experiment_name_file_path, config):
+    return CSIDataTTYPlugin(tty_full_path, tty_save_path, experiment_name_file_path, config)
 
 
 class CSIDataTTYPlugin:
@@ -22,10 +22,11 @@ class CSIDataTTYPlugin:
     application = None
     output_file = None
 
-    def __init__(self, tty_full_path, tty_save_path, experiment_name_file_path):
+    def __init__(self, tty_full_path, tty_save_path, experiment_name_file_path, config):
         self.tty_full_path = tty_full_path
         self.tty_save_path = tty_save_path
         self.experiment_name_file_path = experiment_name_file_path
+        self.config = config
 
         os.makedirs("/tmp/data_rates/dev/", exist_ok=True)
         os.makedirs("/tmp/wifi_channel/dev/", exist_ok=True)
@@ -75,9 +76,10 @@ class CSIDataTTYPlugin:
         # Update Data Rate
         self.data_rate_stats['count'] += 1
 
-        curr_time_seconds = time()
-        csi_line = f"{line},fake_uuid,{curr_time_seconds * 1000},{self.get_experiment_name()}"
-        self.output_file.write(f"{csi_line}\n")
+        if get_is_csi_enabled(self.config):
+            curr_time_seconds = time()
+            csi_line = f"{line},fake_uuid,{curr_time_seconds * 1000},{self.get_experiment_name()}"
+            self.output_file.write(f"{csi_line}\n")
 
     def process_every_second(self, current_second):
         """

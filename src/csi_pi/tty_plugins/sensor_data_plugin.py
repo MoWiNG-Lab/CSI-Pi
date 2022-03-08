@@ -1,8 +1,8 @@
 import requests
 
 
-def get_object(tty_full_path, tty_save_path, experiment_name_file_path):
-    return SensorDataTTYPlugin(tty_full_path, tty_save_path, experiment_name_file_path)
+def get_object(tty_full_path, tty_save_path, experiment_name_file_path, config):
+    return SensorDataTTYPlugin(tty_full_path, tty_save_path, experiment_name_file_path, config)
 
 
 class SensorDataTTYPlugin:
@@ -15,7 +15,7 @@ class SensorDataTTYPlugin:
     To "install" this plugin, add `src.csi_pi.tty_plugins.sensor_data_plugin` to the
     `TTY_PLUGINS` variable within your `./env` file.
     """
-    def __init__(self, tty_full_path, tty_save_path, experiment_name_file_path):
+    def __init__(self, tty_full_path, tty_save_path, experiment_name_file_path, config):
         self.num_sensor_readings = 0
 
     def prefix_string(self):

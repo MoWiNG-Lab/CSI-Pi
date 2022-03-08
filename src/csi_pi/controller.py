@@ -7,7 +7,7 @@ import shutil
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
 
 from src.csi_pi.config import Config
-from src.csi_pi.helpers import toggle_csi, load_from_file
+from src.csi_pi.helpers import get_is_csi_enabled, toggle_csi, load_from_file
 
 
 class Controller:
@@ -30,6 +30,7 @@ class Controller:
     async def get_server_stats(self, request):
         return PlainTextResponse(json.dumps({
             'data_directory': self.config.data_dir,
+            'is_csi_enabled': get_is_csi_enabled(self.config),
             'storage': {
                 'used': shutil.disk_usage("/").used,
                 'total': shutil.disk_usage("/").total,

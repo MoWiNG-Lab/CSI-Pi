@@ -14,8 +14,8 @@ def get_routes(controller: Controller):
         # Perform Actions
         Route("/data", controller.get_data_as_zip),
         Route("/annotation", controller.new_annotation, methods=['POST']),
-        Route("/power_up", controller.power_up, methods=['POST']),
-        Route("/power_down", controller.power_down, methods=['POST']),
+        Route("/enable_csi", controller.enable_csi, methods=['POST']),
+        Route("/disable_csi", controller.disable_csi, methods=['POST']),
 
         # API
         Route("/server-stats", controller.get_server_stats),

@@ -84,11 +84,11 @@ class Controller:
 
         return FileResponse(filename, filename='CSI.zip')
 
-    async def power_up(self, request):
+    async def enable_csi(self, request):
         toggle_csi(self.config, "1")
         return PlainTextResponse("OK")
 
-    async def power_down(self, request):
+    async def disable_csi(self, request):
         toggle_csi(self.config, "0")
         return PlainTextResponse("OK")
 

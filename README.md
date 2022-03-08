@@ -75,18 +75,18 @@ Annotating CSI data can be done through an HTTP endpoint. While the server is ru
 curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/annotation?value=<ACTION_OR_MEASUREMENT_VALUE>'
 ```
 
-## Power Down the USB
+## Disable CSI Data collection
 
-To disable collecting data from the ESP32, you can disable the USB power (technically, this does not power off the ESP32, but it does make the serial data hidden from the Raspberry Pi)
-
-```
-curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_down'
-```
-
-## Power Up the USB
+To disable collecting CSIdata from the ESP32.
 
 ```
-curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_up'
+curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/disable_csi'
+```
+
+## Enable CSI Data collection
+
+```
+curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/enable_csi'
 ```
 
 ## Download data as a ZIP file

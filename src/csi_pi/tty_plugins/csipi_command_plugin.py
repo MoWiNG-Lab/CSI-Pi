@@ -11,8 +11,8 @@ class CSIPiCommandTTYPlugin:
 
     This allows your TTY microcontroller to automatically control CSI-Pi such as
 
-    `CSIPI_COMMAND,POWER_ON` which enable CSI data collection
-    `CSIPI_COMMAND,POWER_OFF` which disables CSI data collection
+    `CSIPI_COMMAND,ENABLE_CSI` which enable CSI data collection
+    `CSIPI_COMMAND,DISABLE_CSI` which disables CSI data collection
 
     To "install" this plugin, add `src.csi_pi.tty_plugins.csipi_command_plugin` to the
     `TTY_PLUGINS` variable within your `./env` file.
@@ -37,10 +37,10 @@ class CSIPiCommandTTYPlugin:
         :param line: str
         :return: None
         """
-        if "POWER_ON" in line:
-            requests.post(f'http://localhost:8080/power_up')
-        elif "POWER_OFF" in line:
-            requests.post(f'http://localhost:8080/power_down')
+        if "ENABLE_CSI" in line:
+            requests.post(f'http://localhost:8080/enable_csi')
+        elif "DISABLE_CSI" in line:
+            requests.post(f'http://localhost:8080/disable_csi')
         else:
             print(f"Unknown CSI_PI_COMMAND: '{line}'")
 

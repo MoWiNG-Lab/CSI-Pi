@@ -3,42 +3,6 @@ import psutil
 import datetime
 
 from src.csi_pi.config import Config
-from src.csi_pi.device import Device
-
-
-def start_listening(config: Config):
-    config.is_listening = True
-
-    # Identify all connected devices
-    currently_connected_devices = Device.get_currently_connected_devices()
-
-    # Remove newly disconnected devices
-    for d in config.devices:
-        if d.device_path not in currently_connected_devices:
-            print("Device no longer detected:", d.device_path)
-            print("Removing device from list.")
-            del config.data_file_names[d.device_path]
-            d.stop_listening(config)
-            config.devices.remove(d)
-
-    # Add newly discovered devices
-    for i, device_path in enumerate(currently_connected_devices):
-        if device_path not in [d.device_path for d in config.devices]:
-            print("New device detected:", device_path)
-            device = Device(device_path=device_path)
-            config.data_file_names[device_path] = f"{config.data_dir}{device_path.split('/')[-1]}.csv"
-            device.start_listening(config)
-            config.devices.append(device)
-
-
-def stop_listening(config: Config):
-    if not config.is_listening:
-        return False
-
-    print("Stop Listening")
-    config.is_listening = False
-
-    kill_child_processes()
 
 
 def setup_app(config: Config):

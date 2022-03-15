@@ -66,35 +66,31 @@ CSI Pi, Steven M. Hernandez
 </pre>
 <div v-if="false">Loading...</div>
 <div v-cloak>
-<pre>
 
----------
-DATA_DIR: {{ server_stats.data_directory }}</pre>
-STORAGE_USED: {{ format_file_size(server_stats.storage.used)  }} of {{ format_file_size(server_stats.storage.total) }} ({{ (server_stats.storage.used / server_stats.storage.total * 100).toFixed(1) }}%)
-<br>
-EXPERIMENT_NAME:
-<br>
-<input type="text" v-model="experiment_name">
-<br>
-NOTES:
-<br>
-<textarea v-model="notes"></textarea>
-<pre>
----------
+---------<br>
+DATA_DIR: {{ server_stats.data_directory }} <br>
+TTY_PLUGINS:<br>
+<div v-for="plugin in server_stats.tty_plugins" style="margin-left: 16px;">- {{ plugin }}</div>
+STORAGE_USED: {{ format_file_size(server_stats.storage.used)  }} of {{ format_file_size(server_stats.storage.total) }} ({{ (server_stats.storage.used / server_stats.storage.total * 100).toFixed(1) }}%)<br>
+EXPERIMENT_NAME:<br>
+<input type="text" v-model="experiment_name"><br>
+NOTES:<br>
+<textarea v-model="notes"></textarea><br>
+---------<br><br>
 
----------
-Devices (Count: {{ device_list.length }}):
+---------<br>
+Devices (Count: {{ device_list.length }}):<br>
 
-</pre>
-    <div v-for="dev in devices" :key="dev.device_name" style='white-space: pre-wrap;' v-bind:class="{'device_block': true, 'error': device_has_error(dev)}">
+    <div v-for="dev in devices" :key="dev.device_name" v-bind:class="{'device_block': true, 'error': device_has_error(dev)}">
         <apexchart type="line" height="150" ref="chart" :options="chart_options(device_has_error(dev))"
                    :series="[{'data': dev.data_rate.split('\n').filter(x => x).map(x => x.split(',')[1]).slice(-60)}]"></apexchart>
-<pre v-if="!server_stats.is_csi_enabled" style="color: red">CSI COLLECTION IS CURRENTLY DISABLED</pre>
-<pre>Device: {{ dev.device_name }}
-Application: {{ dev.application }}
-Channel: {{ dev.wifi_channel }}
-Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz
-File Size: {{ dev.files_size }} bytes ({{ format_file_size(dev.files_size) }})</pre>
+<div v-if="!server_stats.is_csi_enabled" style="color: red">CSI COLLECTION IS CURRENTLY DISABLED</div>
+Device: {{ dev.device_name }} <br>
+Application: {{ dev.application }} <br>
+Channel: {{ dev.wifi_channel }} <br>
+Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz <br>
+File Size: {{ dev.files_size }} bytes ({{ format_file_size(dev.files_size) }}) <br>
+
         <pre class="horizontal_scrollable" v-if="dev.most_recent_csi.samples.length > 0">
 Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(",").slice(-2, -1)[0]).slice(-2,-1).map(x => new Date(parseFloat(x)))[0] }}
 
@@ -134,6 +130,7 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                     server_stats: {
                         data_directory: '',
                         is_csi_enabled: true,
+                        tty_plugins: [],
                         storage: {
                             'used': 0,
                             'total': 0,

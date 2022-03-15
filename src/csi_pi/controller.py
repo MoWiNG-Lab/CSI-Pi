@@ -31,6 +31,7 @@ class Controller:
         return PlainTextResponse(json.dumps({
             'data_directory': self.config.data_dir,
             'is_csi_enabled': get_is_csi_enabled(self.config),
+            'tty_plugins': self.config.tty_plugins,
             'storage': {
                 'used': shutil.disk_usage("/").used,
                 'total': shutil.disk_usage("/").total,

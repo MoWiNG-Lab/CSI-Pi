@@ -6,7 +6,6 @@ from src.csi_pi.config import Config
 from src.csi_pi.controller import Controller
 from src.csi_pi.event_loop import startup_event_loop
 from src.csi_pi.helpers import kill_child_processes, setup_app
-from src.csi_pi.metrics import Metrics
 from src.csi_pi.routes import get_routes
 
 config = Config()

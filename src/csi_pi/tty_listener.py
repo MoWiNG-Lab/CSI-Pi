@@ -40,7 +40,10 @@ class ReadLine:
             if current_stats_second != now:
                 current_stats_second = now
                 for plugin in tty_plugins:
-                    plugin.process_every_second(current_stats_second)
+                    try:
+                        plugin.process_every_second(current_stats_second)
+                    except Exception as e:
+                        print(f"ERROR: {plugin}.process_every_second failed with exception: {e}")
 
             data = self.ser.read(i)
             i = data.find(b"\n")
@@ -56,7 +59,11 @@ class ReadLine:
                     prefix = plugin.prefix_string()
                     if prefix in line:
                         ind = line.index(prefix)
-                        plugin.process(line[ind:])
+                        try:
+                            plugin.process(line[ind:])
+                        except Exception as e:
+                            print(f"ERROR: {plugin}.process failed with exception: {e}")
+
 
             else:
                 self.buf.extend(data)

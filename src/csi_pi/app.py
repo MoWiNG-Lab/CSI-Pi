@@ -9,7 +9,6 @@ from src.csi_pi.helpers import kill_child_processes, setup_app
 from src.csi_pi.routes import get_routes
 
 config = Config()
-metrics = Metrics(config.data_dir)
 controller = Controller(config)
 
 setup_app(config)

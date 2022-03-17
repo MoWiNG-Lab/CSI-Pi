@@ -19,12 +19,8 @@ def get_routes(controller: Controller):
 
         # API
         Route("/server-stats", controller.get_server_stats),
-        Route("/data-directory", controller.get_data_directory),
         Route("/annotation-metrics", controller.get_annotation_metrics),
-        Route("/device-list", controller.get_device_list),
         Route("/device-metrics", controller.get_device_metrics),
-        Route("/experiment-name", controller.get_experiment_name),
         Route("/experiment-name", controller.set_experiment_name, methods=['POST']),
-        Route("/notes", controller.get_notes),
         Route("/notes", controller.set_notes, methods=['POST']),
     ]

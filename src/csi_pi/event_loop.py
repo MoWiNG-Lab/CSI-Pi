@@ -6,13 +6,12 @@ from src.csi_pi.device import Device
 
 def check_devices(config: Config):
     """
-    Call this method in the event-loop. It will handle newly connected and newly disconnected devices.
+    Handle newly connected and newly disconnected devices.
+    This method should be called in the event-loop.
 
     :param config:
     :return:
     """
-    config.is_listening = True
-
     # Identify all connected devices
     currently_connected_devices = Device.get_currently_connected_devices()
 

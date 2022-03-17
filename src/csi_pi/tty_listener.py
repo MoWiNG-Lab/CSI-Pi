@@ -8,9 +8,11 @@ from importlib import import_module
 
 sys.path.append(os.path.dirname(__file__) + "/../../")
 from src.csi_pi.config import Config
+from src.csi_pi.device import Device
 
 tty_plugins = []
 current_stats_second = 0
+
 
 # @See: https://github.com/pyserial/pyserial/issues/216#issuecomment-369414522
 class ReadLine:
@@ -63,8 +65,6 @@ class ReadLine:
                             plugin.process(line[ind:])
                         except Exception as e:
                             print(f"ERROR: {plugin}.process failed with exception: {e}")
-
-
             else:
                 self.buf.extend(data)
 
@@ -88,9 +88,10 @@ if __name__ == "__main__":
     # Clear metric files from previous sessions
     open(f"/tmp/debug{tty_full_path}", "w").close()
 
+    # If the serial connection fails for any reason, automatically re-try.
     while True:
         # Setup serial connection
-        ser = serial.Serial(tty_full_path, config.esp32_baud_rate, timeout=0.1)
+        ser = serial.Serial(tty_full_path, Device.get_device_baud_rate(config, tty_full_path), timeout=0.1)
 
         rl = ReadLine(ser, tty_full_path)
 

@@ -93,43 +93,6 @@ curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/enable_csi'
 
 Open your web browser to `http://<PI_HOSTNAME>.local:8080/data`.
 
-## Download data to a USB Flash Drive
-
-Data is stored on the device, but this does not give us an easy way to collect data from the Raspberry Pi. One method is to mount a usb flash drive to save the files. To achieve, this we need to first setup auto-mount:
-
-```
-$ mkdir /home/pi/CSI-Pi/usb_data_dump
-$ sudo vim /etc/fstab
-
-# Add the next line to the bottom of the file
-/dev/sda1 /home/pi/CSI-Pi/usb_data_dump vfat uid=pi,gid=pi,umask=0022,sync,auto,nosuid,rw,nouser,nofail 0   0 
-```
-
-Next, create a new crontab entry which will be run every minute to check if a new USB flash drive is attached:
-
-```
-$ crontab -e
-
-# Add the next line to the bottom of the file
-* * * * * cd /home/pi/CSI-Pi && /usr/bin/sh src/shell/usb_status.sh
-```
-
-Now, when a USB flash drive is attached, it will copy over the current experiment data to the flash drive. 
-It may take some time to complete this process. As such, the green LED on the raspberry pi will give some status information.
-
-- LED Off: USB device is not attached.
-- LED ON: USB device is detected.
-- LED BLINKING: Data is being saved to the flash drive. **Do not disconnect.**
-
-**Alternatively:** If you want to copy ALL historically recorded data files manually, you can run the following:
-
-```
-sh src/shell/usb_save_all.sh $YOUR_UNIQUE_DEVICE_NAME
-```
-
-Where `YOUR_UNIQUE_DEVICE_NAME` is some arbitrary name given to your device.  
-The files will be stored on your flash drive under the directory `/CSI-Pi/$YOUR_UNIQUE_DEVICE_NAME/1630123456.0123456/*`.
-
 ## Hourly Statistics
 
 If you use discord, you can setup a cronjob to automatically send hourly statistics to a discord webhook. 
@@ -150,9 +113,3 @@ Brown outs can cause the Raspberry Pi to reset randomly, especially when many US
 **ESP32 Module**. Some modules seem to cause more issues than others. 
 We found that if the module does not auto-reset *when being flashed*, it will not automatically reset *when connected to CSI-Pi or when CSI-Pi restarts*. 
 *Help in analyzing this is appreciated!* 
-
-## System Diagrams
-
-![CSI-Pi Flow Diagram](figures/csi_pi_diagram.png)
-
-![CSI-Pi Metrics Flow](figures/csi_pi_metrics.png)

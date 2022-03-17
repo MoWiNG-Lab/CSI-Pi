@@ -153,23 +153,6 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                             self.notes = response.data
                         })
 
-                    function load_device_list() {
-                        axios.get("/device-list")
-                            .then(response => {
-                                new_device_list = response.data;
-
-                                // Remove disconnected devices
-                                Object.keys(self.devices).forEach(k => {
-                                    if (new_device_list.indexOf(k) == -1) {
-                                        delete self.devices[k]
-                                    }
-                                })
-
-                                // Add newly connected devices
-                                self.device_list = new_device_list;
-                            });
-                    }
-
                     function load_device_metrics() {
                         self.device_list.forEach(device_name => {
                             axios.get("/device-metrics?device_name=" + device_name)
@@ -191,11 +174,25 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
                     function load_server_stats() {
                         axios.get("/server-stats")
                             .then(response => {
+                                if (self.server_stats.data_directory !== response.data.data_directory) {
+                                    self.experiment_name = response.data.experiment_name;
+                                    self.notes = response.data.notes;
+                                }
                                 self.server_stats = response.data;
+                                new_device_list = response.data.devices;
+
+                                // Remove disconnected devices
+                                Object.keys(self.devices).forEach(k => {
+                                    if (new_device_list.indexOf(k) === -1) {
+                                        delete self.devices[k]
+                                    }
+                                })
+
+                                // Add newly connected devices
+                                self.device_list = new_device_list;
                             });
                     }
 
-                    setInterval(load_device_list, 1000)
                     setInterval(load_device_metrics, 1000)
                     setInterval(load_annotation_metrics, 1000)
                     setInterval(load_server_stats, 1000)

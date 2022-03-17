@@ -2,9 +2,8 @@ import os
 import math
 import requests
 import shutil
+import json
 from time import time
-
-from src.csi_pi.device import Device
 
 
 def format_file_size(file_size):
@@ -18,8 +17,8 @@ def format_file_size(file_size):
     return file_size
 
 curr_time_seconds = math.floor(time())
-currently_connected_devices = Device.get_currently_connected_devices()
-for tty_full_path in currently_connected_devices:
+server_stats = json.loads(requests.get(url="http://localhost:8080/server-stats").text)
+for tty_full_path in server_stats['devices']:
     try:
         with open(f"/tmp/data_rates{tty_full_path}", "r") as f:
             # Get WiFi Channel
@@ -46,8 +45,8 @@ for tty_full_path in currently_connected_devices:
                     stats['24_hour'] += line_samples_count
 
             # Get File Size
-            raw_data_directory = requests.get(url="http://localhost:8080/data-directory").text
-            file_size = format_file_size(os.path.getsize(f"{raw_data_directory}{tty_full_path.split('/')[-1]}.csv"))
+            data_directory = server_stats['data_directory']
+            file_size = format_file_size(os.path.getsize(f"{data_directory}{tty_full_path.split('/')[-1]}.csv"))
 
             # Print Results
             print(f"{tty_full_path}, Channel: {channel}, {stats['10_min']} collected [10 minutes], {stats['60_min']} collected [1 hour], {stats['24_hour']} [24 hours], {stats['overall']} [overall], {file_size}")

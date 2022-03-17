@@ -48,7 +48,6 @@ class Controller:
         """
         return PlainTextResponse(json.dumps({
             'data_directory': self.config.data_dir,
-            'experiment_name': load_from_file(self.config.data_file_names['experiment_name']),
             'notes': load_from_file(self.config.data_file_names['notes']),
             'is_csi_enabled': get_is_csi_enabled(self.config),
             'tty_plugins': self.config.tty_plugins,
@@ -112,7 +111,7 @@ class Controller:
 
         with zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for f in os.listdir(file_path):
-                if f in ['notes.txt', 'experiment_name.txt']:
+                if f in ['notes.txt']:
                     zipf.write(os.path.join(file_path, f), f)
                 elif f != 'annotations.csv':
                     d = f.replace(".csv", "")
@@ -146,23 +145,6 @@ class Controller:
         """
         toggle_csi(self.config, "0")
         return PlainTextResponse("OK")
-
-    async def set_experiment_name(self, request):
-        """
-        Update the current experiment name
-
-        :param request:
-        :return:
-        """
-        form = await request.json()
-        new_experiment_name = form['name'].replace(',', '')
-
-        f = open(self.config.data_file_names['experiment_name'], 'w+')
-        f.truncate(0)
-        f.write(new_experiment_name)
-        f.flush()
-
-        return PlainTextResponse(new_experiment_name)
 
     async def set_notes(self, request):
         """

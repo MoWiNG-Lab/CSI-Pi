@@ -18,22 +18,12 @@ window.onload = () => {
                     }
                 },
                 notes: "",
-                experiment_name: "",
                 device_list: [],
             }
         },
         methods: {
             reload() {
                 self = this
-                axios.get("/experiment-name")
-                    .then(response => {
-                        self.experiment_name = response.data
-                    })
-                axios.get("/notes")
-                    .then(response => {
-                        self.notes = response.data
-                    })
-
                 function load_device_metrics() {
                     self.device_list.forEach(device_name => {
                         axios.get("/device-metrics?device_name=" + device_name)
@@ -56,7 +46,6 @@ window.onload = () => {
                     axios.get("/server-stats")
                         .then(response => {
                             if (self.server_stats.data_directory !== response.data.data_directory) {
-                                self.experiment_name = response.data.experiment_name;
                                 self.notes = response.data.notes;
                             }
                             self.server_stats = response.data;
@@ -158,15 +147,6 @@ window.onload = () => {
             this.reload()
         },
         watch: {
-            experiment_name: _.debounce(function(value) {
-                axios({
-                    method: "post",
-                    url: '/experiment-name',
-                    data: {
-                        'name': value,
-                    },
-                })
-            }, 500),
             notes: _.debounce(function(value) {
                 axios({
                     method: "post",

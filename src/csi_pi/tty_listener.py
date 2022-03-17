@@ -73,12 +73,11 @@ if __name__ == "__main__":
     # Parse command arguments
     tty_full_path = sys.argv[1]
     tty_save_path = sys.argv[2]
-    experiment_name_file_path = sys.argv[3]
 
     config = Config()
 
     tty_plugins = [
-        getattr(import_module(s), "get_object")(tty_full_path, tty_save_path, experiment_name_file_path, config)
+        getattr(import_module(s), "get_object")(tty_full_path, tty_save_path, config)
         for s in config.tty_plugins
     ]
 

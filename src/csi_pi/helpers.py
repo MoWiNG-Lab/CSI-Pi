@@ -23,14 +23,6 @@ def setup_experiment_filesystem(config: Config):
     config.data_file_names['annotations'].write("type,smartphone_id,timestamp,current_action\n")
     config.data_file_names['annotations'].flush()
 
-    # Add file for experiment_name
-    now = datetime.datetime.today()
-    now_str = f"{now.year}_{now.month}_{now.day}__{now.hour:02}_{now.minute:02}_{now.second:02}"
-    config.data_file_names['experiment_name'] = config.data_dir + "experiment_name.txt"
-    f = open(config.data_file_names['experiment_name'], "w+")
-    f.write(f"default_experiment_name__{now_str}")
-    f.flush()
-
     # Add file for notes
     config.data_file_names['notes'] = config.data_dir + "notes.txt"
     f = open(config.data_file_names['notes'], "w+")

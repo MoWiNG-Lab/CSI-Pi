@@ -22,6 +22,5 @@ def get_routes(controller: Controller):
         Route("/server-stats", controller.get_server_stats),
         Route("/annotation-metrics", controller.get_annotation_metrics),
         Route("/device-metrics", controller.get_device_metrics),
-        Route("/experiment-name", controller.set_experiment_name, methods=['POST']),
         Route("/notes", controller.set_notes, methods=['POST']),
     ]

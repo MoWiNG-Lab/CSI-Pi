@@ -46,7 +46,7 @@ class Device:
 
         # Start a child process to listen for the serial data.
         p = subprocess.Popen(
-            f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {self.device_path} {config.data_file_names[self.device_path]} {config.data_file_names['experiment_name']}".split(" "),
+            f"/usr/bin/python3 {config.app_dir}/src/csi_pi/tty_listener.py {self.device_path} {config.data_file_names[self.device_path]}".split(" "),
             env={'PYTHONPATH': os.environ.get('PYTHONPATH', '') + f":{config.app_dir},"},
             stdout=subprocess.DEVNULL,
             preexec_fn=os.setsid

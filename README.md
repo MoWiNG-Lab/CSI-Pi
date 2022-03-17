@@ -29,9 +29,6 @@ sudo usermod -a -G dialout $USER
 # Set Your Local Timezone
 sudo dpkg-reconfigure tzdata
 
-# Set the name for the deployment location
-echo "example_location_name" > ./name.txt
-
 # Copy config variables. Edit this file as you see fit
 cp .env.example .env
 ```

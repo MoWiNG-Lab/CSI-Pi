@@ -9,6 +9,7 @@ def get_routes(controller: Controller):
     return [
         # Static Routes
         Route("/", controller.index),
+        Mount('/css', app=StaticFiles(directory='src/csi_pi/resources/css'), name="css"),
         Mount('/js', app=StaticFiles(directory='src/csi_pi/resources/js'), name="js"),
 
         # Perform Actions

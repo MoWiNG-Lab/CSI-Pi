@@ -44,6 +44,6 @@ class CSIPiCommandTTYPlugin:
         else:
             print(f"Unknown CSI_PI_COMMAND: '{line}'")
 
-    def process_every_second(self, current_second):
+    def process_every_millisecond(self, current_millisecond):
         pass
 

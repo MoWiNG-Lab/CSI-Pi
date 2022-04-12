@@ -17,6 +17,7 @@ class SensorDataTTYPlugin:
     """
     def __init__(self, tty_full_path, tty_save_path, config):
         self.num_sensor_readings = 0
+        self.previous_millisecond = 0
 
     def prefix_string(self):
         """
@@ -41,13 +42,14 @@ class SensorDataTTYPlugin:
 
         requests.post(f'http://localhost:8080/annotation?value={line}')
 
-    def process_every_second(self, current_second):
+    def process_every_millisecond(self, current_millisecond):
         """
         Process and store statistics for the past one second of TTY data.
 
         :param current_second:
         :return:
         """
-        print(f"We captured {self.num_sensor_readings} sensor readings in the past 1 second.")
-        self.num_sensor_readings = 0
-
+        if self.previous_millisecond + 1000 < current_millisecond:
+            self.previous_millisecond = current_millisecond
+            print(f"We captured {self.num_sensor_readings} sensor readings in the past 1 second.")
+            self.num_sensor_readings = 0

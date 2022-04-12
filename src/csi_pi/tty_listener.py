@@ -11,7 +11,7 @@ from src.csi_pi.config import Config
 from src.csi_pi.device import Device
 
 tty_plugins = []
-current_stats_second = 0
+current_stats_millisecond = 0
 
 
 # @See: https://github.com/pyserial/pyserial/issues/216#issuecomment-369414522
@@ -31,21 +31,21 @@ class ReadLine:
         self.debug_log.flush()
 
     def readline(self):
-        global current_stats_second
+        global current_stats_millisecond
 
         while True:
             # LOOP UNTIL there is a PRINTABLE unit (there may be left over data in the buffer though!)
             i = max(1, min(2048, self.ser.in_waiting))
 
             # Process Data Rate Statistics
-            now = math.floor(time())
-            if current_stats_second != now:
-                current_stats_second = now
+            now = math.floor(time() * 1000)
+            if current_stats_millisecond != now:
+                current_stats_millisecond = now
                 for plugin in tty_plugins:
                     try:
-                        plugin.process_every_second(current_stats_second)
+                        plugin.process_every_millisecond(current_stats_millisecond)
                     except Exception as e:
-                        print(f"ERROR: {plugin}.process_every_second failed with exception: {e}")
+                        print(f"ERROR: {plugin}.process_every_millisecond failed with exception: {e}")
 
             data = self.ser.read(i)
             i = data.find(b"\n")

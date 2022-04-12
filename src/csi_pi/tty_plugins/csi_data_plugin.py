@@ -20,6 +20,8 @@ class CSIDataTTYPlugin:
     application = None
     output_file = None
 
+    previous_millisecond = 0
+
     def __init__(self, tty_full_path, tty_save_path, config):
         self.tty_full_path = tty_full_path
         self.tty_save_path = tty_save_path
@@ -78,17 +80,19 @@ class CSIDataTTYPlugin:
             csi_line = f"{line},fake_uuid,{curr_time_seconds * 1000},default_experiment_name"
             self.output_file.write(f"{csi_line}\n")
 
-    def process_every_second(self, current_second):
+    def process_every_millisecond(self, current_millisecond):
         """
         Process and store statistics for the past one second of TTY data.
 
-        :param current_second:
+        :param current_millisecond:
         :return:
         """
-        self.data_rate_stats['current_second'] = current_second
-        print("Got rate of", self.data_rate_stats['count'], "Hz")
+        if self.previous_millisecond + 1000 < current_millisecond:
+            self.previous_millisecond = current_millisecond
+            self.data_rate_stats['current_second'] = current_millisecond / 1000
+            print("Got rate of", self.data_rate_stats['count'], "Hz")
 
-        with open(f"/tmp/data_rates{self.tty_full_path}", "a") as data_rate_stats_file:
-            data_rate_stats_file.write(f"{current_second},{self.data_rate_stats['count']}\n")
-        self.data_rate_stats['count'] = 0
+            with open(f"/tmp/data_rates{self.tty_full_path}", "a") as data_rate_stats_file:
+                data_rate_stats_file.write(f"{self.data_rate_stats['current_second']},{self.data_rate_stats['count']}\n")
+            self.data_rate_stats['count'] = 0
 

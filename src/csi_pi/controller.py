@@ -23,6 +23,15 @@ class Controller:
         """
         return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/resources/html/index.html').read())
 
+    async def annotate_index(self, request):
+        """
+        Returns the main web-page of CSI-Pi
+
+        :param request:
+        :return:
+        """
+        return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/resources/html/annotate.html').read())
+
     async def new_annotation(self, request):
         """
         Create a new annotation based on the value in `request.query_params['value']`.

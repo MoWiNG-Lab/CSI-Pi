@@ -3,6 +3,7 @@ import json
 from time import time
 import zipfile
 import shutil
+import socket
 
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
 
@@ -65,6 +66,7 @@ class Controller:
                 'total': shutil.disk_usage("/").total,
             },
             'devices': [d.device_path for d in self.config.devices],
+            'hostname': socket.gethostname(),
         }))
 
     async def get_annotation_metrics(self, request):

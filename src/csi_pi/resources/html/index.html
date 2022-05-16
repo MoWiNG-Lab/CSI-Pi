@@ -19,6 +19,7 @@ CSI Pi, Steven M. Hernandez
 <div v-cloak>
 
 ---------<br>
+HOST_NAME: {{ server_stats.hostname }} <br>
 DATA_DIR: {{ server_stats.data_directory }} <br>
 TTY_PLUGINS:<br>
 <div v-for="plugin in server_stats.tty_plugins" style="margin-left: 16px;">- {{ plugin }}</div>

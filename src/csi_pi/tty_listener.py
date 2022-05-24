@@ -8,9 +8,11 @@ from importlib import import_module
 
 sys.path.append(os.path.dirname(__file__) + "/../../")
 from src.csi_pi.config import Config
+from src.csi_pi.device import Device
 
 tty_plugins = []
-current_stats_second = 0
+current_stats_millisecond = 0
+
 
 # @See: https://github.com/pyserial/pyserial/issues/216#issuecomment-369414522
 class ReadLine:
@@ -29,18 +31,21 @@ class ReadLine:
         self.debug_log.flush()
 
     def readline(self):
-        global current_stats_second
+        global current_stats_millisecond
 
         while True:
             # LOOP UNTIL there is a PRINTABLE unit (there may be left over data in the buffer though!)
             i = max(1, min(2048, self.ser.in_waiting))
 
             # Process Data Rate Statistics
-            now = math.floor(time())
-            if current_stats_second != now:
-                current_stats_second = now
+            now = math.floor(time() * 1000)
+            if current_stats_millisecond != now:
+                current_stats_millisecond = now
                 for plugin in tty_plugins:
-                    plugin.process_every_second(current_stats_second)
+                    try:
+                        plugin.process_every_millisecond(current_stats_millisecond)
+                    except Exception as e:
+                        print(f"ERROR: {plugin}.process_every_millisecond failed with exception: {e}")
 
             data = self.ser.read(i)
             i = data.find(b"\n")
@@ -56,8 +61,10 @@ class ReadLine:
                     prefix = plugin.prefix_string()
                     if prefix in line:
                         ind = line.index(prefix)
-                        plugin.process(line[ind:])
-
+                        try:
+                            plugin.process(line[ind:])
+                        except Exception as e:
+                            print(f"ERROR: {plugin}.process failed with exception: {e}")
             else:
                 self.buf.extend(data)
 
@@ -66,12 +73,11 @@ if __name__ == "__main__":
     # Parse command arguments
     tty_full_path = sys.argv[1]
     tty_save_path = sys.argv[2]
-    experiment_name_file_path = sys.argv[3]
 
     config = Config()
 
     tty_plugins = [
-        getattr(import_module(s), "get_object")(tty_full_path, tty_save_path, experiment_name_file_path)
+        getattr(import_module(s), "get_object")(tty_full_path, tty_save_path, config)
         for s in config.tty_plugins
     ]
 
@@ -81,9 +87,10 @@ if __name__ == "__main__":
     # Clear metric files from previous sessions
     open(f"/tmp/debug{tty_full_path}", "w").close()
 
+    # If the serial connection fails for any reason, automatically re-try.
     while True:
         # Setup serial connection
-        ser = serial.Serial(tty_full_path, config.esp32_baud_rate, timeout=0.1)
+        ser = serial.Serial(tty_full_path, Device.get_device_baud_rate(config, tty_full_path), timeout=0.1)
 
         rl = ReadLine(ser, tty_full_path)
 

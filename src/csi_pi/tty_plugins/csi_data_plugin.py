@@ -1,10 +1,10 @@
 import os
 from time import time
-from src.csi_pi.helpers import load_from_file
+from src.csi_pi.helpers import get_is_csi_enabled, load_from_file
 
 
-def get_object(tty_full_path, tty_save_path, experiment_name_file_path):
-    return CSIDataTTYPlugin(tty_full_path, tty_save_path, experiment_name_file_path)
+def get_object(tty_full_path, tty_save_path, config):
+    return CSIDataTTYPlugin(tty_full_path, tty_save_path, config)
 
 
 class CSIDataTTYPlugin:
@@ -16,16 +16,16 @@ class CSIDataTTYPlugin:
         'count': 0,
     }
 
-    experiment_name_set_at = 0
-    experiment_name = ""
     wifi_channel = None
     application = None
     output_file = None
 
-    def __init__(self, tty_full_path, tty_save_path, experiment_name_file_path):
+    previous_millisecond = 0
+
+    def __init__(self, tty_full_path, tty_save_path, config):
         self.tty_full_path = tty_full_path
         self.tty_save_path = tty_save_path
-        self.experiment_name_file_path = experiment_name_file_path
+        self.config = config
 
         os.makedirs("/tmp/data_rates/dev/", exist_ok=True)
         os.makedirs("/tmp/wifi_channel/dev/", exist_ok=True)
@@ -75,29 +75,24 @@ class CSIDataTTYPlugin:
         # Update Data Rate
         self.data_rate_stats['count'] += 1
 
-        curr_time_seconds = time()
-        csi_line = f"{line},fake_uuid,{curr_time_seconds * 1000},{self.get_experiment_name()}"
-        self.output_file.write(f"{csi_line}\n")
+        if get_is_csi_enabled(self.config):
+            curr_time_seconds = time()
+            csi_line = f"{line},fake_uuid,{curr_time_seconds * 1000},default_experiment_name"
+            self.output_file.write(f"{csi_line}\n")
 
-    def process_every_second(self, current_second):
+    def process_every_millisecond(self, current_millisecond):
         """
         Process and store statistics for the past one second of TTY data.
 
-        :param current_second:
+        :param current_millisecond:
         :return:
         """
-        self.data_rate_stats['current_second'] = current_second
-        print("Got rate of", self.data_rate_stats['count'], "Hz")
+        if self.previous_millisecond + 1000 < current_millisecond:
+            self.previous_millisecond = current_millisecond
+            self.data_rate_stats['current_second'] = current_millisecond / 1000
+            print("Got rate of", self.data_rate_stats['count'], "Hz")
 
-        with open(f"/tmp/data_rates{self.tty_full_path}", "a") as data_rate_stats_file:
-            data_rate_stats_file.write(f"{current_second},{self.data_rate_stats['count']}\n")
-        self.data_rate_stats['count'] = 0
-
-    def get_experiment_name(self):
-        os.path.getmtime(self.experiment_name_file_path)
-        if self.experiment_name_set_at < os.path.getmtime(self.experiment_name_file_path):
-            self.experiment_name = load_from_file(self.experiment_name_file_path)
-            self.experiment_name_set_at = os.path.getmtime(self.experiment_name_file_path)
-
-        return self.experiment_name
+            with open(f"/tmp/data_rates{self.tty_full_path}", "a") as data_rate_stats_file:
+                data_rate_stats_file.write(f"{self.data_rate_stats['current_second']},{self.data_rate_stats['count']}\n")
+            self.data_rate_stats['count'] = 0
 

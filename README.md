@@ -106,7 +106,7 @@ CSI_PI_WEBHOOK='https://discord.com/api/webhooks/123123123/abc123123abc'
 
 The CSI data streaming through USB-Serial (TTY) from the ESP32s to CSI-Pi is automatically captured and recorded. 
 This processing is handled through the use of an extendable `tty_plugin` system and is specifically implemented in
-[https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/csi_data_plugin.py](tty_plugins/csi_data_plugin.py).
+[tty_plugins/csi_data_plugin.py](https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/csi_data_plugin.py).
 Within this file, we have a normal Python class which implements the following interface:
 
 ```
@@ -149,7 +149,7 @@ As new lines of data are streamed from your USB-serial devices, CSI-Pi will chec
 If they do, then CSI-Pi will automatically pass the new line to the `process()` method. 
 You are free to process the new line in any way that you see fit. 
 
-Currently, there are [https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/](three tty_plugins) built-into CSI-Pi.
+Currently, there are [three tty_plugins](https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/) built-into CSI-Pi.
 To create your own tty_plugins, create a new python file and build a new class which implements the above interface.
 To install the new tty_plugin, add it to `TTY_PLUGINS` within `~/.env` and restart the CSI-Pi service.
 

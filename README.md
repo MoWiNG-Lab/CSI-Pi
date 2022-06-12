@@ -12,7 +12,7 @@ Afterwards, from the Raspberry Pi terminal, run the following commands:
 
 ```
 # Install project dependencies
-sudo apt-get install git python3-pip pv tmux libgirepository1.0-dev libcairo2-dev vim -y
+sudo apt-get install git python3-pip libgirepository1.0-dev libcairo2-dev vim -y
 
 # Download CSI-Pi from github
 git clone https://github.com/StevenMHernandez/CSI-Pi.git
@@ -28,9 +28,6 @@ sudo usermod -a -G dialout $USER
 
 # Set Your Local Timezone
 sudo dpkg-reconfigure tzdata
-
-# Set the name for the deployment location
-echo "example_location_name" > ./name.txt
 
 # Copy config variables. Edit this file as you see fit
 cp .env.example .env
@@ -75,60 +72,23 @@ Annotating CSI data can be done through an HTTP endpoint. While the server is ru
 curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/annotation?value=<ACTION_OR_MEASUREMENT_VALUE>'
 ```
 
-## Power Down the USB
+## Disable CSI Data collection
 
-To disable collecting data from the ESP32, you can disable the USB power (technically, this does not power off the ESP32, but it does make the serial data hidden from the Raspberry Pi)
-
-```
-curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_down'
-```
-
-## Power Up the USB
+To disable collecting CSIdata from the ESP32.
 
 ```
-curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/power_up'
+curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/disable_csi'
+```
+
+## Enable CSI Data collection
+
+```
+curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/enable_csi'
 ```
 
 ## Download data as a ZIP file
 
 Open your web browser to `http://<PI_HOSTNAME>.local:8080/data`.
-
-## Download data to a USB Flash Drive
-
-Data is stored on the device, but this does not give us an easy way to collect data from the Raspberry Pi. One method is to mount a usb flash drive to save the files. To achieve, this we need to first setup auto-mount:
-
-```
-$ mkdir /home/pi/CSI-Pi/usb_data_dump
-$ sudo vim /etc/fstab
-
-# Add the next line to the bottom of the file
-/dev/sda1 /home/pi/CSI-Pi/usb_data_dump vfat uid=pi,gid=pi,umask=0022,sync,auto,nosuid,rw,nouser,nofail 0   0 
-```
-
-Next, create a new crontab entry which will be run every minute to check if a new USB flash drive is attached:
-
-```
-$ crontab -e
-
-# Add the next line to the bottom of the file
-* * * * * cd /home/pi/CSI-Pi && /usr/bin/sh src/shell/usb_status.sh
-```
-
-Now, when a USB flash drive is attached, it will copy over the current experiment data to the flash drive. 
-It may take some time to complete this process. As such, the green LED on the raspberry pi will give some status information.
-
-- LED Off: USB device is not attached.
-- LED ON: USB device is detected.
-- LED BLINKING: Data is being saved to the flash drive. **Do not disconnect.**
-
-**Alternatively:** If you want to copy ALL historically recorded data files manually, you can run the following:
-
-```
-sh src/shell/usb_save_all.sh $YOUR_UNIQUE_DEVICE_NAME
-```
-
-Where `YOUR_UNIQUE_DEVICE_NAME` is some arbitrary name given to your device.  
-The files will be stored on your flash drive under the directory `/CSI-Pi/$YOUR_UNIQUE_DEVICE_NAME/1630123456.0123456/*`.
 
 ## Hourly Statistics
 
@@ -142,6 +102,84 @@ CSI_PI_WEBHOOK='https://discord.com/api/webhooks/123123123/abc123123abc'
 0 * * * *  /usr/bin/curl --location --request POST $CSI_PI_WEBHOOK --form "content=\"$(/usr/bin/python3 /home/pi/CSI-Pi/src/stats/daily_stats.py)\""
 ```
 
+## TTY_PLUGINS
+
+The CSI data streaming through USB-Serial (TTY) from the ESP32s to CSI-Pi is automatically captured and recorded. 
+This processing is handled through the use of an extendable `tty_plugin` system and is specifically implemented in
+[tty_plugins/csi_data_plugin.py](https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/csi_data_plugin.py).
+Within this file, we have a normal Python class which implements the following interface:
+
+```
+class ExampleTTYPlugin:
+    def __init__(self, tty_full_path, tty_save_path, config):
+        pass
+        
+    def prefix_string(self):
+        """
+        For each incoming line from our devices we will look for the following prefix-string.
+        If the line starts with this string, then we will call `process(line)`.
+        :return: str
+        """
+
+        return "CSI_DATA,"
+
+    def process(self, line):
+        """
+        When we find a string that begins with `prefix_string()`, this function will be called.
+        Process the incoming line as you wish.
+        :param line: str
+        :return: None
+        """
+
+        pass
+
+    def process_every_millisecond(self, current_millisecond):
+        """
+        Process and store statistics for the past one second of TTY data.
+
+        :param current_millisecond:
+        :return:
+        """
+        
+        pass
+```
+
+Notice, the `prefix_string()` method returns a string `"CSI_DATA,"`. 
+As new lines of data are streamed from your USB-serial devices, CSI-Pi will check if the lines begin with this `prefix_string()`. 
+If they do, then CSI-Pi will automatically pass the new line to the `process()` method. 
+You are free to process the new line in any way that you see fit. 
+
+Currently, there are [three tty_plugins](https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/) built-into CSI-Pi.
+To create your own tty_plugins, create a new python file and build a new class which implements the above interface.
+To install the new tty_plugin, add it to `TTY_PLUGINS` within `~/.env` and restart the CSI-Pi service.
+
+### `src.csi_pi.tty_plugins.csi_data_plugin`
+
+The first and most important tty_plugin is the `csi_data_plugin` which captures all new lines starting with `CSI_DATA,`.
+These lines are saved in a local storage file and the plugin automatically calculates important metrics about the incoming data such as the data rate.
+
+### `src.csi_pi.tty_plugins.csipi_command_plugin`
+
+The `csipi_command_plugin` listens for any lines that begin with `CSIPI_COMMAND,`. 
+This tty_plugin allows you to control CSI-Pi directly from your ESP32 (or other) microcontroller.
+The following commands are currently implemented:
+
+* `DISABLE_CSI` will stop CSI data from being collected. This is useful if you only want to collect CSI periodically.
+* `ENABLE_CSI` will re-allow CSI data from being collected.
+
+Example: To disable CSI data collection, your ESP32 (or similar) microcontroller must send the following string through serial: `CSIPI_COMMAND,DISABLE_CSI\n`.
+
+### `src.csi_pi.tty_plugins.sensor_data_plugin`
+
+Finally, we have a tty_plugin which allows us to create new annotations automatically from your ESP32 (or other) microcontroller. 
+This is useful when we have a sensor that we wish to use for performing annotation.
+
+Suppose we have some sensor with a reading of value `10`. 
+If our ESP32 (or similar) microcontroller outputs the following string through serial: `SENSOR_DATA,10\n`,
+then the value `10` will automatically be posted as a new annotation. 
+Notice, we can pass not only numeric values, but also any string we wish. 
+For example: `SENSOR_DATA,ANYTHING_WE_WISH\n`.
+
 ## Common Issues
 
 **Power Supply**. Make sure you have a powerful enough power supply to prevent a brown out. 
@@ -150,9 +188,3 @@ Brown outs can cause the Raspberry Pi to reset randomly, especially when many US
 **ESP32 Module**. Some modules seem to cause more issues than others. 
 We found that if the module does not auto-reset *when being flashed*, it will not automatically reset *when connected to CSI-Pi or when CSI-Pi restarts*. 
 *Help in analyzing this is appreciated!* 
-
-## System Diagrams
-
-![CSI-Pi Flow Diagram](figures/csi_pi_diagram.png)
-
-![CSI-Pi Metrics Flow](figures/csi_pi_metrics.png)

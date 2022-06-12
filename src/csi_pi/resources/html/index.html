@@ -2,50 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <style>
-        * {
-            font-family: monospace
-        }
-
-        pre {
-            margin: 0;
-        }
-
-        input, textarea {
-            border: black 1px solid;
-            width: 400px;
-            max-width: 400px;
-            padding: 4px 7px;
-            margin-bottom: 8px;
-            border-radius: 2px;
-        }
-
-        textarea {
-            height: 50px;
-        }
-
-        .device_block {
-            border: 1px solid black;
-            padding: 4px 7px;
-            display: inline-block;
-            max-width: 400px;
-            margin: 20px 40px 20px 0;
-            border-radius: 2px;
-            vertical-align: top;
-        }
-
-        .device_block .horizontal_scrollable {
-            overflow-x: scroll;
-            -ms-overflow-style: none; /* IE and Edge */
-            scrollbar-width: none; /* Firefox */
-        }
-
-        .device_block .horizontal_scrollable::-webkit-scrollbar {
-            display: none;
-        }
-
-        [v-cloak] { display: none; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
     <title>CSI-Pi</title>
 </head>
 <body>
@@ -60,34 +17,30 @@ CSI Pi, Steven M. Hernandez
 </pre>
 <div v-if="false">Loading...</div>
 <div v-cloak>
-<pre>
 
----------
-DATA_DIR: {{ server_stats.data_directory }}</pre>
-STORAGE_USED: {{ format_file_size(server_stats.storage.used)  }} of {{ format_file_size(server_stats.storage.total) }} ({{ (server_stats.storage.used / server_stats.storage.total * 100).toFixed(1) }}%)
-EXPERIMENT_NAME:
-<br>
-<input type="text" v-model="experiment_name">
-<br>
-NOTES:
-<br>
-<textarea v-model="notes"></textarea>
-<pre>
----------
+---------<br>
+HOST_NAME: {{ server_stats.hostname }} <br>
+DATA_DIR: {{ server_stats.data_directory }} <br>
+TTY_PLUGINS:<br>
+<div v-for="plugin in server_stats.tty_plugins" style="margin-left: 16px;">- {{ plugin }}</div>
+STORAGE_USED: {{ format_file_size(server_stats.storage.used)  }} of {{ format_file_size(server_stats.storage.total) }} ({{ (server_stats.storage.used / server_stats.storage.total * 100).toFixed(1) }}%)<br>
+NOTES:<br>
+<textarea v-model="notes"></textarea><br>
+---------<br><br>
 
----------
-Devices (Count: {{ device_list.length }}):
+---------<br>
+Devices (Count: {{ device_list.length }}):<br>
 
-</pre>
-    <div v-for="dev in devices" :key="dev.device_name" style='white-space: pre-wrap;' class="device_block">
-        <apexchart type="line" height="150" ref="chart" :options="chartOptions"
+    <div v-for="dev in devices" :key="dev.device_name" v-bind:class="{'device_block': true, 'error': device_has_error(dev)}">
+        <apexchart type="line" height="150" ref="chart" :options="chart_options(device_has_error(dev))"
                    :series="[{'data': dev.data_rate.split('\n').filter(x => x).map(x => x.split(',')[1]).slice(-60)}]"></apexchart>
-        <pre>
-Device: {{ dev.device_name }}
-Application: {{ dev.application }}
-Channel: {{ dev.wifi_channel }}
-Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz
-File Size: {{ dev.files_size }} bytes ({{ format_file_size(dev.files_size) }})</pre>
+<div v-if="!server_stats.is_csi_enabled" style="color: red">CSI COLLECTION IS CURRENTLY DISABLED</div>
+Device: {{ dev.device_name }} <br>
+Application: {{ dev.application }} <br>
+Channel: {{ dev.wifi_channel }} <br>
+Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz <br>
+File Size: {{ dev.files_size }} bytes ({{ format_file_size(dev.files_size) }}) <br>
+
         <pre class="horizontal_scrollable" v-if="dev.most_recent_csi.samples.length > 0">
 Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(",").slice(-2, -1)[0]).slice(-2,-1).map(x => new Date(parseFloat(x)))[0] }}
 
@@ -113,173 +66,6 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
 <script src="/js/apexcharts.min.js"></script>
 <script src="/js/vue-apexcharts.min.js"></script>
 <script src="/js/lodash.full.min.js"></script>
-<script>
-    var app = null;
-    window.onload = () => {
-        app = new Vue({
-            el: '#app',
-            data() {
-                return {
-                    device_loaded: "",
-                    devices: {},
-                    data_rates: {},
-                    annotations_data: "",
-                    server_stats: {
-                        data_directory: '',
-                        storage: {
-                            'used': 0,
-                            'total': 0,
-                        }
-                    },
-                    notes: "",
-                    experiment_name: "",
-                    device_list: [],
-                    chartOptions: {
-                        chart: {
-                            id: 'realtime',
-                            fontFamily: 'monospace',
-                            height: 150,
-                            type: 'line',
-                            animations: {
-                                enabled: false,
-                            },
-                            toolbar: {
-                                show: false
-                            },
-                            zoom: {
-                                enabled: false
-                            }
-                        },
-                        dataLabels: {
-                            enabled: false
-                        },
-                        stroke: {
-                            curve: 'smooth',
-                            colors: ['#000000'],
-                            width: 1,
-                        },
-                        xaxis: {
-                            axisBorder: {
-                                show: false
-                            },
-                            axisTicks: {
-                                show: false
-                            },
-                            labels: {
-                                show: false
-                            },
-                            range: 60,
-                        },
-                        yaxis: {
-                            title: {text: 'Data Rate (Hz)'},
-                            labels: {
-                                style: {
-                                    fontWeight: 100
-                                }
-                            }
-                        },
-                        legend: {
-                            show: false
-                        },
-                    },
-                }
-            },
-            methods: {
-                reload() {
-                    self = this
-                    axios.get("/experiment-name")
-                        .then(response => {
-                            self.experiment_name = response.data
-                        })
-                    axios.get("/notes")
-                        .then(response => {
-                            self.notes = response.data
-                        })
-
-                    function load_device_list() {
-                        axios.get("/device-list")
-                            .then(response => {
-                                new_device_list = response.data;
-
-                                // Remove disconnected devices
-                                Object.keys(self.devices).forEach(k => {
-                                    if (new_device_list.indexOf(k) == -1) {
-                                        delete self.devices[k]
-                                    }
-                                })
-
-                                // Add newly connected devices
-                                self.device_list = new_device_list;
-                            });
-                    }
-
-                    function load_device_metrics() {
-                        self.device_list.forEach(device_name => {
-                            axios.get("/device-metrics?device_name=" + device_name)
-                                .then(response => {
-                                    if (response.data.status === 'OK') {
-                                        self.devices[device_name] = response.data;
-                                    }
-                                });
-                        })
-                    }
-
-                    function load_annotation_metrics() {
-                        axios.get("/annotation-metrics")
-                            .then(response => {
-                                self.annotations_data = response.data.data;
-                            });
-                    }
-
-                    function load_server_stats() {
-                        axios.get("/server-stats")
-                            .then(response => {
-                                self.server_stats = response.data;
-                            });
-                    }
-
-                    setInterval(load_device_list, 1000)
-                    setInterval(load_device_metrics, 1000)
-                    setInterval(load_annotation_metrics, 1000)
-                    setInterval(load_server_stats, 1000)
-                },
-                format_file_size(size) {
-                    if (size > 1e9) {
-                        return (size / 1e9).toFixed(1) + " GBs"
-                    }
-                    if (size > 1e6) {
-                        return (size / 1e6).toFixed(1) + " MBs"
-                    }
-                    return (size / 1e3).toFixed(1) + " kBs"
-                }
-            },
-            mounted() {
-                this.reload()
-            },
-            watch: {
-                experiment_name: _.debounce(function(value) {
-                    axios({
-                        method: "post",
-                        url: '/experiment-name',
-                        data: {
-                            'name': value,
-                        },
-                    })
-                }, 500),
-                notes: _.debounce(function(value) {
-                    axios({
-                        method: "post",
-                        url: '/notes',
-                        data: {
-                            'note': value,
-                        },
-                    })
-                }, 500),
-            }
-        });
-
-        Vue.component('apexchart', VueApexCharts)
-    }
-</script>
+<script src="/js/main.js"></script>
 </body>
 </html>

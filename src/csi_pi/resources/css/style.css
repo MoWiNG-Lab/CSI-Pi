@@ -1,0 +1,50 @@
+* {
+    font-family: monospace
+}
+
+pre {
+    margin: 0;
+}
+
+input, textarea {
+    border: black 1px solid;
+    width: 400px;
+    max-width: 400px;
+    padding: 4px 7px;
+    margin-bottom: 8px;
+    border-radius: 2px;
+}
+
+textarea {
+    height: 50px;
+}
+
+.device_block {
+    border: 1px solid black;
+    padding: 4px 7px;
+    display: inline-block;
+    max-width: 400px;
+    margin: 20px 40px 20px 0;
+    border-radius: 2px;
+    vertical-align: top;
+}
+
+.device_block.error {
+    background: #111;
+    border: 1px solid #111;
+    color: #fff;
+}
+
+.device_block .horizontal_scrollable {
+    overflow-x: scroll;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+.device_block .horizontal_scrollable::-webkit-scrollbar {
+    display: none;
+}
+
+[v-cloak] {
+    display: none;
+}

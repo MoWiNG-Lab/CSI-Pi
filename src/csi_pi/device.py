@@ -13,7 +13,7 @@ class Device:
     def get_currently_connected_devices():
         devices = []
         for d in os.listdir("/dev"):
-            for type in ['ttyUSB', 'ttyACM']:
+            for type in ['ttyUSB', 'ttyACM', 'cu.usb']:
                 if type in d:
                     devices.append("/dev/" + d)
         return sorted(devices)
@@ -23,6 +23,7 @@ class Device:
         baud_rates = {
             'ttyUSB': config.esp32_baud_rate,
             'ttyACM': config.acm_baud_rate,
+            'cu.usb': config.esp32_baud_rate,
         }
         baud_rate = None
         for k in baud_rates.keys():

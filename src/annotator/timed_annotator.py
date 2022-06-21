@@ -5,15 +5,16 @@ import requests
 from pynput import keyboard
 from urllib3.exceptions import NewConnectionError, MaxRetryError
 
-ACTION_DURATION_SECONDS = 5
-TRANSITION_DURATION_SECONDS = 3
+# [Constant] For how many seconds will each action be performed:
+ACTION_DURATION_SECONDS = 10
+# [Constant] How long will be the ignored transitioning period:
+TRANSITION_DURATION_SECONDS = 10
+
+# [Variable] Whether to pause in the current/next transitioning period:
 IS_TO_PAUSE_IN_REST = False
 TO_END_PROGRAM = False
 IGNORED_CLASS_LABEL = "none"
-CLASSES = ["THUMB", "INDEX", "MIDDLE", "RING", "LITTLE",
-           "THUMB_LITTLE", "THUMB_RING_LITTLE_V_SIGN", "THUMB_INDEX",
-           "STRAIGHT_STATIC", "FIST", "THUMB_UP",
-           "PITCH_PALM", "ROLL_PALM", "YAWN_PALM"]
+CLASSES = ["COBRA", "BACK_CURL", "BIRD_DOG", "BRIDGE", "LEG_RAISE"]
 
 
 def key_press(key):
@@ -77,8 +78,9 @@ if __name__ == '__main__':
         if TO_END_PROGRAM:
             break
         else:
-            print("-------------------------------TIME-UP-------------------------------\n\n")
+            print(f"-------------------------------DO: {className}-------------------------------\n\n")
 
+        time.sleep(1)
         print_response(post_next_action_label(className), className)
         t = ACTION_DURATION_SECONDS
         while t > 0:

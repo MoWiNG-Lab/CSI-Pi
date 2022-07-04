@@ -1,11 +1,11 @@
-import os
 import json
-from time import time
-import zipfile
+import os
 import shutil
 import socket
+import zipfile
+from time import time
 
-from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
+from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse, JSONResponse
 
 from src.csi_pi.config import Config
 from src.csi_pi.helpers import get_is_csi_enabled, toggle_csi, load_from_file
@@ -173,3 +173,38 @@ class Controller:
         f.flush()
 
         return PlainTextResponse(new_note_data)
+
+    async def get_camera_list(self, request):
+        """
+        List all the connected active cameras.
+        :param request:
+        :return:
+        """
+        cams = []
+        for cam in self.config.cameras:
+            cams.append(cam.device_path)
+        return JSONResponse(json.dumps(cams))
+
+    async def start_cam(self, request):
+        """
+        If any camera is attached to the system, then start recording video feeds from the camera and
+        save it inside the data directory of the current session.
+
+        :param request:
+        :return: "OK" if the camera is attached & video recording is started, otherwise the specific error-message.
+        """
+        cam_number = request.query_params["camera_number"] if "camera_number" in request.query_params else 0
+        expt_name = request.query_params["expt"] if "expt" in request.query_params else self.config.expt_name
+        params = request.query_params["params"] if "params" in request.query_params else ""
+        return PlainTextResponse(self.config.cameras[cam_number].start_recording(expt_name, params))
+
+    async def end_cam(self, request):
+        """
+        If any camera is attached to the system, then start recording video feeds from the camera and
+        save it inside the data directory of the current session.
+
+        :param request:
+        :return: "OK" if the video recording is properly completed & processed, otherwise the specific error-message.
+        """
+        cam_number = request.query_params["camera_number"] if "camera_number" in request.query_params else 0
+        return PlainTextResponse(self.config.cameras[cam_number].end_recording())

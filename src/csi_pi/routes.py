@@ -24,4 +24,9 @@ def get_routes(controller: Controller):
         Route("/annotation-metrics", controller.get_annotation_metrics),
         Route("/device-metrics", controller.get_device_metrics),
         Route("/notes", controller.set_notes, methods=['POST']),
+
+        # Camera APIs
+        Route("/cam", controller.get_camera_list),
+        Route("/cam/start", controller.start_cam, methods=['POST']),
+        Route("/cam/end", controller.end_cam, methods=['POST']),
     ]

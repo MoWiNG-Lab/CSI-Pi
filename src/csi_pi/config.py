@@ -5,6 +5,7 @@ load_dotenv()
 
 
 class Config:
+    expt_name = os.environ['NAME']
     app_dir = os.environ['APP_DIR']
     shell_dir = f"{app_dir}/src/shell"
     data_dir = f"{app_dir}/storage/data/{time()}/"
@@ -17,6 +18,7 @@ class Config:
     # Device Variables
     data_file_names = {}
     devices = []
+    cameras = []
 
     # TTY-Plugins
     default_tty_plugins = """

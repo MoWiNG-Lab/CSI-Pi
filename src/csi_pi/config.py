@@ -28,3 +28,12 @@ class Config:
         os.environ.get('TTY_PLUGINS', default_tty_plugins).strip().split("\n")
         if plugin[0] != "#" # any lines starting with `#` are comments and should be ignored
     ]
+
+    # TODO : Camera Plugins -- not fully integrated, will do after video recording format is well tested.
+    default_cam_plugins = """
+    src.csi_pi.camera.plugins.video_recorder
+    """
+    cam_plugins = [
+        plugin.strip() for plugin in os.environ.get('CAM_PLUGINS', default_tty_plugins).strip().split("\n")
+        if plugin[0] != "#"  # any lines starting with `#` are comments and should be ignored
+    ]

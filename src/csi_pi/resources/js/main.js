@@ -6,6 +6,7 @@ window.onload = () => {
             return {
                 device_loaded: "",
                 devices: {},
+                cameras: {},
                 data_rates: {},
                 annotations_data: "",
                 server_stats: {
@@ -141,7 +142,15 @@ window.onload = () => {
             },
             device_has_error(device) {
                 return !this.server_stats.is_csi_enabled;
-            }
+            },
+            video_start(cam_number){
+                axios.post("/cam/start?cam_num=" + cam_number)
+                    .then(response => {
+                        if (response.data.status === 'OK') {
+                            self.cameras[cam_number] = response.data;
+                        }
+                    });
+            },
         },
         mounted() {
             this.reload()

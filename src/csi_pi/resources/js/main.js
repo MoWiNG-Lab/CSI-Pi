@@ -143,8 +143,18 @@ window.onload = () => {
             device_has_error(device) {
                 return !this.server_stats.is_csi_enabled;
             },
-            video_start(cam_number){
-                axios.post("/cam/start?cam_num=" + cam_number)
+            video_start(){
+                let cam_number = 0
+                axios.post("/cam/start?camera_number=" + cam_number)
+                    .then(response => {
+                        if (response.data.status === 'OK') {
+                            self.cameras[cam_number] = response.data;
+                        }
+                    });
+            },
+            video_end(){
+                let cam_number = 0
+                axios.post("/cam/end?camera_number=" + cam_number)
                     .then(response => {
                         if (response.data.status === 'OK') {
                             self.cameras[cam_number] = response.data;

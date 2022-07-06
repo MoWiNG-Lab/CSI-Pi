@@ -28,8 +28,9 @@ NOTES:<br>
 <textarea v-model="notes"></textarea><br>
 ---------<br><br>
 
-    <div style="margin-left: 16px;">
-        <button onclick="video_start()">Start Video Recording</button>
+    <div>
+        <button @click="video_start">Start Video Recording</button>
+        <button @click="video_end">End Video Recording</button>
     </div>
 
 ---------<br>

@@ -128,6 +128,8 @@ class Controller:
                     d = f.replace(".csv", "")
                     zipf.write(os.path.join(file_path, f), f"{d}/{f}")
                     zipf.write(os.path.join(file_path, 'annotations.csv'), f"{d}/annotations.csv")
+                elif f.endswith(".mkv") or f.endswith(".avi") or f.endswith(".mp4"):
+                    zipf.write(os.path.join(file_path, f), f"{d}/{f}")
 
         return FileResponse(filename, filename='CSI.zip')
 
@@ -193,10 +195,8 @@ class Controller:
         :param request:
         :return: "OK" if the camera is attached & video recording is started, otherwise the specific error-message.
         """
-        cam_number = request.query_params["camera_number"] if "camera_number" in request.query_params else 0
-        expt_name = request.query_params["expt"] if "expt" in request.query_params else self.config.expt_name
-        params = request.query_params["params"] if "params" in request.query_params else ""
-        return PlainTextResponse(self.config.cameras[cam_number].start_recording(expt_name, params))
+        cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
+        return PlainTextResponse(self.config.cameras[cam_number].start_recording())
 
     async def end_cam(self, request):
         """
@@ -206,5 +206,5 @@ class Controller:
         :param request:
         :return: "OK" if the video recording is properly completed & processed, otherwise the specific error-message.
         """
-        cam_number = request.query_params["camera_number"] if "camera_number" in request.query_params else 0
+        cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
         return PlainTextResponse(self.config.cameras[cam_number].end_recording())

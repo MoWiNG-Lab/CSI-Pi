@@ -27,6 +27,7 @@ def get_routes(controller: Controller):
 
         # Camera APIs
         Route("/cam", controller.get_camera_list),
-        Route("/cam/start", controller.start_cam, methods=['POST']),
-        Route("/cam/end", controller.end_cam, methods=['POST']),
+        Route("/video/start", controller.start_video, methods=['POST']),
+        Route("/video/end", controller.end_video, methods=['POST']),
+        Route("/video/download", controller.download_video),
     ]

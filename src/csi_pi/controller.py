@@ -187,23 +187,24 @@ class Controller:
             cams.append(cam.device_path)
         return JSONResponse(json.dumps(cams))
 
-    async def start_cam(self, request):
+    async def start_video(self, request):
         """
         If any camera is attached to the system, then start recording video feeds from the camera and
         save it inside the data directory of the current session.
 
-        :param request:
-        :return: "OK" if the camera is attached & video recording is started, otherwise the specific error-message.
+        :param request: (optional) `camera_number`, in case of a multi-camera setup
+        :return: JSON-object with the proper video-file-path if the camera is attached & video recording is started,
+        otherwise containing the specific error-message.
         """
         cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
         return PlainTextResponse(self.config.cameras[cam_number].start_recording())
 
-    async def end_cam(self, request):
+    async def end_video(self, request):
         """
         If any camera is attached to the system, then start recording video feeds from the camera and
         save it inside the data directory of the current session.
 
-        :param request:
+        :param request: (optional) `camera_number`, in case of a multi-camera setup
         :return: "OK" if the video recording is properly completed & processed, otherwise the specific error-message.
         """
         cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)

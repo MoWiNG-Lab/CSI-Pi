@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess as sp
 import time
@@ -16,29 +17,32 @@ class VideoRecorder:
     def __init__(self, config: Config):
         self.config = config
         self.recorder_process = None
-        # self.params = params
-        self.FPS = 15
-        self.TMP_FILE = "/tmp/csi_session.h264"
-        self.TMP_FILE_TIMES = "/tmp/csi_session.txt"
+        self.FPS = 30
         self.VIDEO_FILE_NAME = f"{self.config.data_dir}_{time.time()}.avi"
 
-    def start_recording(self):
-        os.makedirs(self.config.data_dir, exist_ok=True)
-        self.VIDEO_FILE_NAME = f"{self.config.data_dir}_{time.time()}.avi"
+    def start_recording(self, debug=False):
         f"""
-        Starts to record camera feed into the {self.TMP_FILE} using the provided params
-        :return: "OK" if the camera is attached & video recording is started, otherwise the specific error-message.
+        Starts to record the camera feed in AVI format using GStreamer & `libcamera` library bundled with Bullseye+ OS.
+        :return: JSON-object with the proper video-file-path if the camera is attached & video recording is started, 
+        otherwise containing the specific error-message.
         """
+        if debug:
+            self.VIDEO_FILE_NAME = f"{int(time.time().__floor__())}.avi"
+        else:
+            os.makedirs(self.config.data_dir, exist_ok=True)
+            self.VIDEO_FILE_NAME = f"{self.config.data_dir}_{time.time()}.avi"
         # noinspection PyBroadException
         try:
-            cmd = f"gst-launch-1.0 -e libcamerasrc ! video/x-raw, width=640, height=480, " \
-                  f"framerate=15/1 ! clockoverlay time-format=\"%d-%b-%Y, %H:%M:%S\" ! avimux ! " \
+            cmd = f"gst-launch-1.0 -e -v libcamerasrc ! " \
+                  f"'video/x-raw,format=(string)I420,width=320,height=240,framerate={self.FPS}/1' ! " \
+                  f"clockoverlay time-format=\"%d-%b-%Y, %H:%M:%S\" ! " \
+                  f"avimux ! " \
                   f"filesink location='{self.VIDEO_FILE_NAME}'"  #
             print(f"Recording video using CMD: '{cmd}'")
             self.recorder_process = sp.Popen([cmd], shell=True)
-            return "OK"
+            return json.dumps({'status': 'OK', 'file': self.VIDEO_FILE_NAME})
         except:
-            return f"ERROR: {traceback.format_exc()}"
+            return json.dumps({'status': 'OK', 'message': f"ERROR: {traceback.format_exc()}"})
 
     def end_recording(self):
         """
@@ -55,25 +59,23 @@ class VideoRecorder:
                 # sp.Popen([f"kill {pid+1}"], shell=True)
 
                 while True:
-                    pid = int(sp.check_output(["pidof", "gst-launch-1.0"]).strip())
-                    print("\n\t\tNew PID:", pid, "\n")
-                    if not pid or pid < 1:
+                    try:
+                        pid = int(sp.check_output(["pidof", "gst-launch-1.0"]).strip())
+                        print("\n\t\tNew PID:", pid, "\n")
+                        if not pid or pid < 1:
+                            break
+                        sp.Popen([f"kill {pid}"], shell=True)
+                    except sp.CalledProcessError as cpe:
+                        print(cpe)
                         break
-                    sp.Popen([f"kill {pid}"], shell=True)
 
-                # Afterwards, process the recorded file into an MKV file & delete the temporary files.
-                # sp.Popen(
-                #     [f"mkvmerge -o {self.VIDEO_FILE_NAME} --timecodes 0:{self.TMP_FILE_TIMES} {self.TMP_FILE}"],
-                #     shell=True)
-                # os.remove(self.TMP_FILE)
-                # os.remove(self.TMP_FILE_TIMES)
-            return "OK"
+            return json.dumps({'status': 'OK', 'file': self.VIDEO_FILE_NAME})
         except:
-            return f"ERROR: {traceback.format_exc()}"
+            return json.dumps({'status': 'OK', 'message': f"ERROR: {traceback.format_exc()}"})
 
 
 if __name__ == '__main__':
     v = VideoRecorder(Config())
-    v.start_recording()
+    v.start_recording(debug=True)
     time.sleep(10)
     v.end_recording()

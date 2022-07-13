@@ -209,3 +209,15 @@ class Controller:
         """
         cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
         return PlainTextResponse(self.config.cameras[cam_number].end_recording())
+
+    async def download_video(self, request):
+        """
+        Download the most recent recorded video.
+        :param request:
+        :return:
+        """
+        cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
+        filepath = self.config.cameras[cam_number].video_recorder.VIDEO_FILE_NAME
+        filename = filepath[filepath.rindex('_') + 1:]
+        print(f"Path = {filepath}\nParsed Name = {filename}\n\n")
+        return FileResponse(path=filepath, filename=filename)

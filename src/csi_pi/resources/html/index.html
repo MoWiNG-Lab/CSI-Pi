@@ -29,8 +29,8 @@ NOTES:<br>
 ---------<br><br>
 
     <div>
-        <button @click="video_start">Start Video Recording</button>
-        <button @click="video_end">End Video Recording</button>
+        {{ video_timer_span }} <button @click="video_download" v-if="is_video_to_download">Download</button><br/>
+        <button @click="video_start_end" class="btn-vid">{{ video_action_prompt }}</button>
     </div>
 
 ---------<br>

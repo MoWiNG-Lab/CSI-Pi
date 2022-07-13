@@ -7,6 +7,11 @@ window.onload = () => {
                 device_loaded: "",
                 devices: {},
                 cameras: {},
+                video_timer_span: "",
+                video_action_prompt: "Start Recording Video",
+                video_timer_start: null,
+                video_file: "",
+                is_video_to_download: false,
                 data_rates: {},
                 annotations_data: "",
                 server_stats: {
@@ -25,6 +30,7 @@ window.onload = () => {
         methods: {
             reload() {
                 self = this
+
                 function load_device_metrics() {
                     self.device_list.forEach(device_name => {
                         axios.get("/device-metrics?device_name=" + device_name)
@@ -64,9 +70,29 @@ window.onload = () => {
                         });
                 }
 
+                function eval_video_timer() {
+                    if (self.video_timer_start == null) {
+                        self.video_action_prompt = "Start Recording New Video";
+                        if (self.video_file.length > 1) {
+                            self.is_video_to_download = true;
+                            self.video_timer_span = "Last Recorded Video: " + self.video_file.substring(self.video_file.lastIndexOf('/') + 1);
+                        } else {
+                            self.is_video_to_download = false;
+                            self.video_timer_span = "";
+                        }
+                        return;
+                    }
+                    self.video_action_prompt = "End Video Recording";
+                    self.is_video_to_download = false;
+                    const secs = (new Date().getTime() - self.video_timer_start.getTime()) / 1000;
+                    self.video_timer_span = "Recording Duration = "
+                        + Math.floor(secs / 60.0) + ":" + Math.floor(secs % 60);
+                }
+
                 setInterval(load_device_metrics, 1000)
                 setInterval(load_annotation_metrics, 1000)
                 setInterval(load_server_stats, 1000)
+                setInterval(eval_video_timer, 1000)
             },
             format_file_size(size) {
                 if (size > 1e9) {
@@ -103,7 +129,7 @@ window.onload = () => {
                     stroke: {
                         curve: 'smooth',
                         colors: [
-                            has_error ? '#FFFFFF': '#000000'
+                            has_error ? '#FFFFFF' : '#000000'
                         ],
                         width: 1,
                     },
@@ -123,13 +149,13 @@ window.onload = () => {
                         title: {
                             text: 'Data Rate (Hz)',
                             style: {
-                                color: has_error ? '#FFFFFF': '#000000',
+                                color: has_error ? '#FFFFFF' : '#000000',
                             }
                         },
                         labels: {
                             style: {
                                 colors: [
-                                    has_error ? '#FFFFFF': '#000000'
+                                    has_error ? '#FFFFFF' : '#000000'
                                 ],
                                 fontWeight: 100
                             }
@@ -143,30 +169,45 @@ window.onload = () => {
             device_has_error(device) {
                 return !this.server_stats.is_csi_enabled;
             },
-            video_start(){
-                let cam_number = 0
-                axios.post("/cam/start?camera_number=" + cam_number)
-                    .then(response => {
-                        if (response.data.status === 'OK') {
-                            self.cameras[cam_number] = response.data;
-                        }
-                    });
+            video_start_end() {
+                function video_start() {
+                    let cam_number = 0
+                    axios.post("/video/start?camera_number=" + cam_number)
+                        .then(response => {
+                            if (response.data.status === 'OK') {
+                                self.cameras[cam_number] = response.data;
+                                self.video_file = response.data.file;
+                                self.video_timer_start = new Date();
+                            }
+                        });
+                }
+
+                function video_end() {
+                    let cam_number = 0
+                    axios.post("/video/end?camera_number=" + cam_number)
+                        .then(response => {
+                            if (response.data.status === 'OK') {
+                                self.cameras[cam_number] = response.data;
+                                self.video_timer_start = null;
+                            }
+                        });
+                }
+
+                if (self.video_timer_start == null)
+                    video_start();
+                else video_end();
             },
-            video_end(){
-                let cam_number = 0
-                axios.post("/cam/end?camera_number=" + cam_number)
-                    .then(response => {
-                        if (response.data.status === 'OK') {
-                            self.cameras[cam_number] = response.data;
-                        }
-                    });
-            },
+            video_download() {
+                let cam_number = 0;
+                const host = window.location.protocol + "//" + window.location.host;
+                window.open(host + '/video/download?camera_number=' + cam_number, '_blank');
+            }
         },
         mounted() {
             this.reload()
         },
         watch: {
-            notes: _.debounce(function(value) {
+            notes: _.debounce(function (value) {
                 axios({
                     method: "post",
                     url: '/notes',

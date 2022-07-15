@@ -86,6 +86,31 @@ curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/disable_csi'
 curl --location --request POST 'http://<PI_HOSTNAME>.local:8080/enable_csi'
 ```
 
+## Install & Enable Camera (ArduCam)
+This project has optional feature to video-record the data-collection session using any attached camera module, preferably [ArduCam](https://www.arducam.com/) to the Raspberry Pi Bullseye OS 1.18.4+. The support for older Raspberry Pi OS versions are not intended for now, although support for a few other devices like NVIDIA Jetson kits are in plan.
+
+We need to install [GStreamer](https://gstreamer.freedesktop.org/) to be able to record video in this project. The following commands can be used to install the prerequisite:
+```
+# install dependencies (if missing)
+$ sudo apt-get install libx264-dev libjpeg-dev
+# install the GStreamer plugins
+$ sudo apt-get install libgstreamer1.0-dev \
+     libgstreamer-plugins-base1.0-dev \
+     libgstreamer-plugins-bad1.0-dev \
+     gstreamer1.0-plugins-ugly \
+     gstreamer1.0-tools \
+     gstreamer1.0-gl \
+     gstreamer1.0-gtk3
+     
+# install the following plugin, if you want to work with audio and have a microphone attached (untested & not currently implemented in the project)
+$ sudo apt-get install gstreamer1.0-pulseaudio
+```
+After installation, the functionality of GStreamer can be confirmed if the following command shows the live-stream of the attached camera in Raspberry Pi Bullseye OS:
+```
+gst-launch-1.0 libcamerasrc ! video/x-raw, width=640, height=480, framerate=30/1 ! videoconvert ! videoscale ! clockoverlay time-format="%D %H:%M:%S" ! autovideosink
+```
+_**FIXME:** The size of the video file is quite large (~200MB per minute of recording), so it is recommended to use a large enough storage to save the recorded video. Moreover, the video recording often gets stopped / the Raspberry Pi device shutsdown after 15~40 minutes of recording, the cause of which is still to be explored._
+
 ## Download data as a ZIP file
 
 Open your web browser to `http://<PI_HOSTNAME>.local:8080/data`.

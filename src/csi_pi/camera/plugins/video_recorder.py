@@ -18,7 +18,7 @@ class VideoRecorder:
         self.config = config
         self.recorder_process = None
         self.FPS = 30
-        self.VIDEO_FILE_NAME = f"{self.config.data_dir}_{time.time()}.avi"
+        self.VIDEO_FILE_NAME = f"{self.config.data_dir}_{time.time() * 1000}.avi"
 
     def start_recording(self, debug=False):
         f"""
@@ -27,10 +27,10 @@ class VideoRecorder:
         otherwise containing the specific error-message.
         """
         if debug:
-            self.VIDEO_FILE_NAME = f"{int(time.time().__floor__())}.avi"
+            self.VIDEO_FILE_NAME = f"{int((time.time() * 1000).__floor__())}.avi"
         else:
             os.makedirs(self.config.data_dir, exist_ok=True)
-            self.VIDEO_FILE_NAME = f"{self.config.data_dir}_{time.time()}.avi"
+            self.VIDEO_FILE_NAME = f"{self.config.data_dir}_{time.time() * 1000}.avi"
         # noinspection PyBroadException
         try:
             cmd = f"gst-launch-1.0 -e -v libcamerasrc ! " \

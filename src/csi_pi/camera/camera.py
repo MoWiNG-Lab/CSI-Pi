@@ -3,9 +3,6 @@ import threading
 import time
 import traceback
 
-from picamera2.encoders.h264_encoder import H264Encoder
-from picamera2.picamera2 import Picamera2
-
 from src.csi_pi.camera.plugins.video_recorder import VideoRecorder
 from src.csi_pi.config import Config
 

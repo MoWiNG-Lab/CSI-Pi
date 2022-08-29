@@ -35,7 +35,7 @@ class VideoRecorder:
         try:
             cmd = f"gst-launch-1.0 -e -v libcamerasrc ! " \
                   f"'video/x-raw,format=(string)I420,width=320,height=240,framerate={self.FPS}/1' ! " \
-                  f"clockoverlay time-format=\"%d-%b-%Y, %H:%M:%S\" ! " \
+                  f"clockoverlay time-format=\"%d-%b-%Y, %H:%M:%S.%f\" ! " \
                   f"avimux ! " \
                   f"filesink location='{self.VIDEO_FILE_NAME}'"  #
             print(f"Recording video using CMD: '{cmd}'")

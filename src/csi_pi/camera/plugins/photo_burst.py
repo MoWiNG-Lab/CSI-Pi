@@ -23,7 +23,7 @@ class RepeatedTimer(object):
 
     def _run(self):
         self.is_running = False
-        self.start()
+        self.start()    # The actual looping happens here.
         self.function(*self.args, **self.kwargs)
 
     def start(self):
@@ -88,12 +88,11 @@ class PhotoBurst:
         self.recorder_process = None
         self.GDRIVE_PHOTO_FOLDER = config.GDRIVE_PHOTO_FOLDER
         self.google_drive = GAuth(env_path=f"{config.app_dir}/environment")
+        self.rep_timer = None
 
-    def capture(self, folder_path, interval_secs):
+    def capture(self, folder_path):
         if not self.to_capture:
             return json.dumps({'status': 'OK', 'message': f"ERROR: Session is already completed."})
-
-        # TODO: Schedule next capture using RepeatedTimer object in every `interval_secs` seconds
 
         file_name = f"{folder_path}/{time.time() * 1000}.jpg"
         # noinspection PyBroadException
@@ -107,7 +106,7 @@ class PhotoBurst:
         except:
             return json.dumps({'status': 'OK', 'message': f"ERROR: {traceback.format_exc()}"})
 
-    def start_burst(self, interval_secs=5, debug=False):
+    def start_burst(self, interval_secs=5):
         f"""
         Save camera-feed image every `interval_secs` seconds.
         :param: interval_secs Interval in seconds between two successive captures.
@@ -117,7 +116,9 @@ class PhotoBurst:
         folder_path = f"{self.config.data_dir}/photos_{time.time() * 1000}"
         os.makedirs(folder_path, exist_ok=True)
         self.to_capture = True
-        return self.capture(folder_path, interval_secs)
+        self.rep_timer = RepeatedTimer(interval_secs, self.capture, folder_path)
+        self.rep_timer.start()
+        # return self.capture(folder_path, interval_secs)
 
     def end_burst(self):
         f"""
@@ -129,11 +130,11 @@ class PhotoBurst:
 
 if __name__ == '__main__':
     pb = PhotoBurst(Config())
-    pb.google_drive.upload(
-        "/home/pi/CSI-Pi/storage/data/1663179399.8994606/photos_1663179835910.1692/1663179835913.842.jpg",
-        pb.GDRIVE_PHOTO_FOLDER)
-    # pb.start_burst()
-    # print("I've started 30 Seconds of photo-bursting. Put an eye in the specified GDrive ...")
-    # time.sleep(30)
-    # pb.end_burst()
-    # print("30 Seconds of photo-bursting has just ended.")
+    # DONE: pb.google_drive.upload(
+    #     "/home/pi/CSI-Pi/storage/data/1663179399.8994606/photos_1663179835910.1692/1663179835913.842.jpg",
+    #     pb.GDRIVE_PHOTO_FOLDER)
+    pb.start_burst()
+    print("I've started 30 Seconds of photo-bursting. Put an eye in the specified GDrive ...")
+    time.sleep(90)
+    pb.end_burst()
+    print("30 Seconds of photo-bursting has just ended.")

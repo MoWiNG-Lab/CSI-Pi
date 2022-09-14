@@ -221,3 +221,28 @@ class Controller:
         filename = filepath[filepath.rindex('_') + 1:]
         print(f"Path = {filepath}\nParsed Name = {filename}\n\n")
         return FileResponse(path=filepath, filename=filename)
+
+    async def start_photo_burst(self, request):
+        """
+        If any camera is attached to the system, then start recording video feeds from the camera and
+        save it inside the data directory of the current session.
+
+        :param request: (optional) `camera_number`, in case of a multi-camera setup
+        :return: JSON-object with the proper video-file-path if the camera is attached & video recording is started,
+        otherwise containing the specific error-message.
+        """
+        cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
+        interval = int(request.query_params["interval"]
+                       if "interval" in request.query_params else self.config.photo_burst_interval)
+        return PlainTextResponse(self.config.cameras[cam_number].start_photo_burst(interval))
+
+    async def end_photo_burst(self, request):
+        """
+        If any camera is attached to the system, then start recording video feeds from the camera and
+        save it inside the data directory of the current session.
+
+        :param request: (optional) `camera_number`, in case of a multi-camera setup
+        :return: "OK" if the video recording is properly completed & processed, otherwise the specific error-message.
+        """
+        cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
+        return PlainTextResponse(self.config.cameras[cam_number].end_photo_burst())

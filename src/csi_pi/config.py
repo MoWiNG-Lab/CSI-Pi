@@ -9,6 +9,9 @@ class Config:
     app_dir = os.environ['APP_DIR']
     shell_dir = f"{app_dir}/src/shell"
     data_dir = f"{app_dir}/storage/data/{time()}/"
+    gdrive_photo_folder = os.environ['GDRIVE_PHOTO_FOLDER']
+    photo_burst_interval = os.environ['PHOTO_BURST_INTERVAL']
+    is_to_start_photo_burst = (1 == os.environ['TO_START_PHOTO_BURST_WITH_SERVER'])
     WRITE_CSI_LOCK = '/tmp/lock.write_csi.txt'
 
     # Baud Rate
@@ -28,7 +31,7 @@ class Config:
     tty_plugins = [
         plugin.strip() for plugin in
         os.environ.get('TTY_PLUGINS', default_tty_plugins).strip().split("\n")
-        if plugin[0] != "#" # any lines starting with `#` are comments and should be ignored
+        if plugin[0] != "#"  # any lines starting with `#` are comments and should be ignored
     ]
 
     # TODO : Camera Plugins -- not fully integrated, will do after video recording format is well tested.

@@ -10,6 +10,10 @@ window.onload = () => {
                 video_timer_span: "",
                 video_action_prompt: "Start Recording Video",
                 video_timer_start: null,
+                photo_burst_span: "",
+                photo_burst_action_prompt: "Start Photo Burst",
+                photo_burst_start_time: null,
+                photo_file: "",
                 video_file: "",
                 is_video_to_download: false,
                 data_rates: {},
@@ -71,6 +75,7 @@ window.onload = () => {
                 }
 
                 function eval_video_timer() {
+                    /* region: Video-timer */
                     if (self.video_timer_start == null) {
                         self.video_action_prompt = "Start Recording New Video";
                         if (self.video_file.length > 1) {
@@ -80,13 +85,31 @@ window.onload = () => {
                             self.is_video_to_download = false;
                             self.video_timer_span = "";
                         }
-                        return;
+                    } else {
+                        self.video_action_prompt = "End Video Recording";
+                        self.is_video_to_download = false;
+                        const secs = (new Date().getTime() - self.video_timer_start.getTime()) / 1000;
+                        self.video_timer_span = "Recording Duration = "
+                            + Math.floor(secs / 60.0) + ":" + Math.floor(secs % 60);
                     }
-                    self.video_action_prompt = "End Video Recording";
-                    self.is_video_to_download = false;
-                    const secs = (new Date().getTime() - self.video_timer_start.getTime()) / 1000;
-                    self.video_timer_span = "Recording Duration = "
-                        + Math.floor(secs / 60.0) + ":" + Math.floor(secs % 60);
+                    /* endregion: Video-timer */
+
+                    // region: Photo-Burst texts
+                    if (self.photo_burst_start_time == null) {
+                        self.photo_burst_action_prompt = "Start Photo Burst";
+                        if (self.photo_file.length > 1)
+                            self.photo_burst_span = "Last Photo-Burst Session's First Photo: " + self.photo_file;
+                        else
+                            self.photo_burst_span = "";
+                    } else {
+                        self.photo_burst_action_prompt = "End Photo Burst";
+                        if (self.photo_file.length > 1)
+                            self.photo_burst_span = "A new photo-burst started at " + self.photo_burst_start_time
+                                + " with initial photo at " + self.photo_file + ".";
+                        else
+                            self.photo_burst_span = "A new photo-burst started at " + self.photo_burst_start_time;
+                    }
+                    // endregion: Photo-Burst texts
                 }
 
                 setInterval(load_device_metrics, 1000)
@@ -196,6 +219,34 @@ window.onload = () => {
                 if (self.video_timer_start == null)
                     video_start();
                 else video_end();
+            },
+            photo_burst_start_end() {
+                function pb_start() {
+                    let cam_number = 0
+                    axios.post("/photo/burst/start?camera_number=" + cam_number)
+                        .then(response => {
+                            if (response.data.status === 'OK') {
+                                self.cameras[cam_number] = response.data;
+                                self.photo_burst_start_time = new Date();
+                                self.photo_file = response.data.file;
+                            }
+                        });
+                }
+
+                function pb_end() {
+                    let cam_number = 0
+                    axios.post("/photo/burst/end?camera_number=" + cam_number)
+                        .then(response => {
+                            if (response.data.status === 'OK') {
+                                self.cameras[cam_number] = response.data;
+                                self.photo_burst_start_time = null;
+                            }
+                        });
+                }
+
+                if (self.photo_burst_start_time == null)
+                    pb_start();
+                else pb_end();
             },
             video_download() {
                 let cam_number = 0;

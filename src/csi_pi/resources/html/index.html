@@ -31,6 +31,8 @@ NOTES:<br>
     <div>
         {{ video_timer_span }} <button @click="video_download" v-if="is_video_to_download">Download</button><br/>
         <button @click="video_start_end" class="btn-vid">{{ video_action_prompt }}</button>
+        <button @click="photo_burst_start_end" class="btn-vid">{{ photo_burst_action_prompt }}</button><br/>
+        {{ photo_burst_span }}
     </div>
 
 ---------<br>

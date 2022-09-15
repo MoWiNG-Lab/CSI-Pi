@@ -1,6 +1,7 @@
 import asyncio
 
 from src.csi_pi.camera.camera import Camera
+from src.csi_pi.camera.plugins.photo_burst import CaptureStatus
 from src.csi_pi.config import Config
 from src.csi_pi.device import Device
 
@@ -62,6 +63,23 @@ def check_esp32_devices(config):
             config.devices.append(device)
 
 
+async def check_photo_burst(config):
+    while True:
+        print(f"event_loop.py:: config.is_to_start_photo_burst_at_startup={config.is_to_start_photo_burst_at_startup}")
+        await asyncio.sleep(1)
+        print(f"event_loop.py:: len(config.cameras)={len(config.cameras)}")
+
+        # if there is at least one-camera and ENV file indicates to start photo-bursting at the startup of the server,
+        # then start photo-bursting with the first camera.
+        if len(config.cameras) > 0 and config.is_to_start_photo_burst_at_startup:
+                # and not config.cameras[0].photo_burst.is_capturing:
+            if CaptureStatus.STANDBY == config.cameras[0].photo_burst.capture_status:  # not capturing & not stopped
+                config.cameras[0].start_photo_burst(int(config.photo_burst_interval))
+            # The following call is self-sufficient to capture based on the conditions of capturing the photo.
+            config.cameras[0].photo_burst.perform_burst()
+            # config.is_to_start_photo_burst_at_startup = False
+
+
 async def watch_devices(config: Config):
     print("Start event loop. Watching for devices to connect or disconnected.")
     while True:
@@ -73,4 +91,6 @@ def startup_event_loop(config):
     async def start_event_loop_lambda():
         loop = asyncio.get_event_loop()
         loop.create_task(watch_devices(config))
+        loop.create_task(check_photo_burst(config))
+
     return start_event_loop_lambda

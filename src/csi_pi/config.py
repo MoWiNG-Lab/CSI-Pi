@@ -11,7 +11,7 @@ class Config:
     data_dir = f"{app_dir}/storage/data/{time()}/"
     gdrive_photo_folder = os.environ['GDRIVE_PHOTO_FOLDER']
     photo_burst_interval = os.environ['PHOTO_BURST_INTERVAL']
-    is_to_start_photo_burst = (1 == os.environ['TO_START_PHOTO_BURST_WITH_SERVER'])
+    is_to_start_photo_burst_at_startup = (int(os.environ['BEGIN_PHOTO_BURST_AT_STARTUP']) == 1)
     WRITE_CSI_LOCK = '/tmp/lock.write_csi.txt'
 
     # Baud Rate

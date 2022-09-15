@@ -3,7 +3,7 @@ import os
 import subprocess as sp
 import time
 import traceback
-from threading import Timer
+from enum import Enum
 
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
@@ -11,30 +11,10 @@ from pydrive.drive import GoogleDrive
 from src.csi_pi.config import Config
 
 
-class RepeatedTimer(object):
-    def __init__(self, interval, function, *args, **kwargs):
-        self._timer = None
-        self.interval = interval
-        self.function = function
-        self.args = args
-        self.kwargs = kwargs
-        self.is_running = False
-        # self.start()
-
-    def _run(self):
-        self.is_running = False
-        self.start()  # The actual looping happens here.
-        self.function(*self.args, **self.kwargs)
-
-    def start(self):
-        if not self.is_running:
-            self._timer = Timer(self.interval, self._run)
-            self._timer.start()
-            self.is_running = True
-
-    def stop(self):
-        self._timer.cancel()
-        self.is_running = False
+class CaptureStatus(Enum):
+    STANDBY = 1
+    CAPTURING = 2
+    STOP = 3
 
 
 class GAuth:
@@ -84,20 +64,25 @@ class PhotoBurst:
 
     def __init__(self, config: Config):
         self.config = config
-        self.to_capture = False
+        self.interval_seconds = int(config.photo_burst_interval)
+        self.curr_capture_interval = 0
+        self.capture_status = CaptureStatus.STANDBY
+        self.folder_path = None
         self.gst_process = None
         self.GDRIVE_PHOTO_FOLDER = config.gdrive_photo_folder
         self.google_drive = GAuth(env_path=f"{config.app_dir}/environment")
         self.rep_timer = None
 
     def capture(self, folder_path):
-        if not self.to_capture:
+        if self.capture_status != CaptureStatus.CAPTURING:
             return json.dumps({'status': 'OK', 'message': f"ERROR: Session is already completed."})
 
         file_name = f"{folder_path}/{time.time() * 1000}.jpg"
         # noinspection PyBroadException
         try:
-            cmd = f"gst-launch-1.0 libcamerasrc ! videoconvert ! jpegenc snapshot=true ! " \
+            cmd = f"gst-launch-1.0 libcamerasrc ! videoconvert ! " \
+                  f"clockoverlay time-format=\"%d-%b-%Y, %H:%M:%S\" ! " \
+                  f"jpegenc snapshot=true ! " \
                   f"filesink location='{file_name}'"  #
             print(f"Capturing image using CMD: '{cmd}'")
             self.gst_process = sp.Popen([cmd], shell=True)
@@ -113,22 +98,35 @@ class PhotoBurst:
         :return: JSON-object with the proper first image's file-path if the camera is attached & photo-bursting is started, 
         otherwise containing the specific error-message.
         """
-        if self.to_capture:
+        if self.capture_status == CaptureStatus.CAPTURING:
             return json.dumps({'status': 'OK', 'message': f"ERROR: Already bursting photos using this camera."})
 
-        folder_path = f"{self.config.data_dir}/photos_{time.time() * 1000}"
-        os.makedirs(folder_path, exist_ok=True)
-        self.to_capture = True
-        self.rep_timer = RepeatedTimer(interval_secs, self.capture, folder_path)
-        self.rep_timer.start()
-        return self.capture(folder_path)
+        self.interval_seconds = int(interval_secs)
+        self.curr_capture_interval = 1
+        self.folder_path = f"{self.config.data_dir}/photos_{time.time() * 1000}"
+        os.makedirs(self.folder_path, exist_ok=True)
+        self.capture_status = CaptureStatus.CAPTURING
+        return self.capture(self.folder_path)
+
+    def perform_burst(self):
+        f"""
+        This function is supposed to be called per second to check whether we're to capture the camera-frame based 
+        on the capture-interval and capture-status. 
+        """
+        if self.capture_status == CaptureStatus.CAPTURING \
+                and self.curr_capture_interval != 0 \
+                and self.curr_capture_interval % self.interval_seconds == 0:
+            self.capture(folder_path=self.folder_path)
+            self.curr_capture_interval = 1
+        self.curr_capture_interval += 1
 
     def end_burst(self):
         f"""
-        Call to end a currently active photo-burst.
+        This function ends a currently active photo-burst, irrespective of the photo-burst been started by the 
+        server startup event or an individual API-call.
         """
-        self.to_capture = False
-        self.rep_timer.stop()
+        self.capture_status = CaptureStatus.STOP
+        self.curr_capture_interval = 0
 
         # For photo-captures, `self.gst_process` should not exist at this point,
         # but just ensuring below that it is out of the way by now.
@@ -145,10 +143,12 @@ class PhotoBurst:
 if __name__ == '__main__':
     pb = PhotoBurst(Config())
     # DONE: pb.google_drive.upload(
-    #     "/home/pi/CSI-Pi/storage/data/1663179399.8994606/photos_1663179835910.1692/1663179835913.842.jpg",
+    #     "/absolute/path/of/the/image/file",
     #     pb.GDRIVE_PHOTO_FOLDER)
     pb.start_burst(10)
     print("I've started 30 Seconds of photo-bursting. Put an eye in the specified GDrive ...")
-    time.sleep(30)
+    for i in range(1, 30):
+        pb.perform_burst()
+        time.sleep(1)
     pb.end_burst()
     print("30 Seconds of photo-bursting has just ended.")

@@ -2,16 +2,18 @@ from starlette.routing import Route
 from starlette.routing import Mount
 from starlette.staticfiles import StaticFiles
 
+from src.csi_pi.config import Config
 from src.csi_pi.controller import Controller
 
 
-def get_routes(controller: Controller):
+def get_routes(controller: Controller, config: Config):
     return [
         # Static Routes
         Route("/", controller.index),
         Route("/annotate", controller.annotate_index),
         Mount('/css', app=StaticFiles(directory='src/csi_pi/resources/css'), name="css"),
         Mount('/js', app=StaticFiles(directory='src/csi_pi/resources/js'), name="js"),
+        Mount('/files/', app=StaticFiles(directory=config.data_dir)),
 
         # Perform Actions
         Route("/data", controller.get_data_as_zip),
@@ -33,4 +35,5 @@ def get_routes(controller: Controller):
 
         Route("/photo/burst/start", controller.start_photo_burst, methods=['POST']),
         Route("/photo/burst/end", controller.end_photo_burst, methods=['POST']),
+        Route("/photo/burst/newest", controller.get_newest_photo),
     ]

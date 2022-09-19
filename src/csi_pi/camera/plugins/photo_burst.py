@@ -68,6 +68,7 @@ class PhotoBurst:
         self.curr_capture_interval = 0
         self.capture_status = CaptureStatus.STANDBY
         self.folder_path = None
+        self.most_recent_file = None
         self.gst_process = None
         self.GDRIVE_PHOTO_FOLDER = config.gdrive_photo_folder
         self.google_drive = GAuth(env_path=f"{config.app_dir}/environment")
@@ -86,6 +87,8 @@ class PhotoBurst:
                   f"filesink location='{file_name}'"  #
             print(f"Capturing image using CMD: '{cmd}'")
             self.gst_process = sp.Popen([cmd], shell=True)
+            self.gst_process.wait()
+            self.most_recent_file = file_name
             self.google_drive.upload(file_name, self.GDRIVE_PHOTO_FOLDER)
             return json.dumps({'status': 'OK', 'file': file_name})
         except:

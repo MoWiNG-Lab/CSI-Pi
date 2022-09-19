@@ -17,7 +17,7 @@ setup_experiment_filesystem(config)
 
 # Register the Starlette HTTP server application
 app = Starlette(
-    routes=get_routes(controller),
+    routes=get_routes(controller, config),
     on_startup=[startup_event_loop(config)],
 )
 

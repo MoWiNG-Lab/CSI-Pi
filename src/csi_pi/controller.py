@@ -246,3 +246,15 @@ class Controller:
         """
         cam_number = int(request.query_params["camera_number"] if "camera_number" in request.query_params else 0)
         return PlainTextResponse(self.config.cameras[cam_number].end_photo_burst())
+
+    async def get_newest_photo(self, request):
+        """
+        Return a path to the most recent photo for all photo_burst cameras.
+
+        :param request:
+        :return: JSON-object with list of most recent camera images.
+        """
+        most_recent_photos = [cam.photo_burst.most_recent_file for cam in self.config.cameras]
+        most_recent_photos = ['/'.join(f.split('/')[-2:]) for f in most_recent_photos if f is not None]
+        most_recent_photos = [f'/files/{f}' for f in most_recent_photos]
+        return JSONResponse({'status': 'OK', 'most_recent': most_recent_photos})

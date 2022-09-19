@@ -34,6 +34,10 @@ NOTES:<br>
         <button @click="photo_burst_start_end" class="btn-vid">{{ photo_burst_action_prompt }}</button><br/>
         {{ photo_burst_span }}
     </div>
+    <br>
+    <div>
+        <img v-bind:src="img" v-for="img in camera_images">
+    </div>
 
 ---------<br>
 Devices (Count: {{ device_list.length }}):<br>

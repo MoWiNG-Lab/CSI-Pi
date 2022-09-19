@@ -19,6 +19,10 @@ textarea {
     height: 50px;
 }
 
+img {
+    width: 415px;
+}
+
 .btn-vid {
     padding: 8px 16px;
 }

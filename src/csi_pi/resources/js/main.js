@@ -123,7 +123,7 @@ window.onload = () => {
                 setInterval(load_device_metrics, 1000)
                 setInterval(load_annotation_metrics, 1000)
                 setInterval(load_server_stats, 1000)
-                setInterval(load_camera_images, 1000)
+                setInterval(load_camera_images, 100)
                 setInterval(eval_video_timer, 1000)
             },
             format_file_size(size) {

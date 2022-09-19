@@ -18,6 +18,8 @@ def format_file_size(file_size):
 
 curr_time_seconds = math.floor(time())
 server_stats = json.loads(requests.get(url="http://localhost:8080/server-stats").text)
+
+# For each ESP32
 for tty_full_path in server_stats['devices']:
     try:
         with open(f"/tmp/data_rates{tty_full_path}", "r") as f:
@@ -33,7 +35,7 @@ for tty_full_path in server_stats['devices']:
                 'overall': 0,
             }
             for l in f.readlines():
-                line_time = int(l.split(",")[0])
+                line_time = float(l.split(",")[0])
                 line_samples_count = int(l.split(",")[1])
 
                 stats['overall'] += line_samples_count
@@ -53,6 +55,10 @@ for tty_full_path in server_stats['devices']:
     except Exception as e:
         print(f"{tty_full_path}, Exception while calculating stats: ", e)
 
+# For each camera
+for i, camera_photo_burst_path in enumerate(server_stats['cameras']):
+    print(f"Camera #{i}: {len(os.listdir(camera_photo_burst_path))} photos")
+
 storage_used = format_file_size(shutil.disk_usage("/").used)
 storage_available = format_file_size(shutil.disk_usage("/").total)
-print(f"Total Storage Used: {storage_used}, Available: {storage_available}).")
+print(f"Total Storage Used: {storage_used}, Available: {storage_available}.")

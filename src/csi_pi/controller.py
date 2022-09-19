@@ -66,6 +66,7 @@ class Controller:
                 'total': shutil.disk_usage("/").total,
             },
             'devices': [d.device_path for d in self.config.devices],
+            'cameras': [c.photo_burst.folder_path for c in self.config.cameras],
             'hostname': socket.gethostname(),
         }))
 

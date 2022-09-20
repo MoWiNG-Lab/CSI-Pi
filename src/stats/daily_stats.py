@@ -57,7 +57,11 @@ for tty_full_path in server_stats['devices']:
 
 # For each camera
 for i, camera_photo_burst_path in enumerate(server_stats['cameras']):
-    print(f"Camera #{i}: {len(os.listdir(camera_photo_burst_path))} photos")
+    size = sum([
+        os.path.getsize(f)
+        for f in os.scandir(camera_photo_burst_path)
+    ])
+    print(f"Camera #{i}: {len(os.listdir(camera_photo_burst_path))} photos, {format_file_size(size)}")
 
 storage_used = format_file_size(shutil.disk_usage("/").used)
 storage_available = format_file_size(shutil.disk_usage("/").total)

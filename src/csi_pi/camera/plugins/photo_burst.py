@@ -89,7 +89,7 @@ class PhotoBurst:
             self.gst_process = sp.Popen([cmd], shell=True)
             self.gst_process.wait()
             self.most_recent_file = file_name
-            self.google_drive.upload(file_name, self.GDRIVE_PHOTO_FOLDER)
+            # self.google_drive.upload(file_name, self.GDRIVE_PHOTO_FOLDER)
             return json.dumps({'status': 'OK', 'file': file_name})
         except:
             return json.dumps({'status': 'OK', 'message': f"ERROR: {traceback.format_exc()}"})

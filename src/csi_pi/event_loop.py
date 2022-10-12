@@ -72,7 +72,7 @@ async def check_photo_burst(config: Config):
 
         # if there is at least one-camera and ENV file indicates to start photo-bursting at the startup of the server,
         # then start photo-bursting with the first camera.
-        if len(config.cameras) > 0 and config.is_to_start_photo_burst_at_startup:
+        if len(config.cameras) > 0 and config.cam_mode == config.CAM_MODE_PHOTO_BURST:
             # and not config.cameras[0].photo_burst.is_capturing:
             if CaptureStatus.STANDBY == config.cameras[0].photo_burst.capture_status:  # not capturing & not stopped
                 config.cameras[0].start_photo_burst(int(config.photo_burst_interval))
@@ -83,13 +83,13 @@ async def check_photo_burst(config: Config):
 
 async def check_video_startup(config: Config):
     while True:
-        await asyncio.sleep(1)
+        await asyncio.sleep(10)
         now = dt.now()
         curr = now.hour * 100 + now.minute
         print(f"curr={curr}, start={config.video_start_time}, end={config.video_end_time}")
-        if config.video_start_time <= curr <= config.video_end_time:
+        if config.video_start_time <= curr < config.video_end_time:
             config.cameras[0].start_recording()
-        elif curr >= config.video_end_time or curr <= config.video_start_time:
+        else:
             config.cameras[0].end_recording()
 
 
@@ -109,11 +109,11 @@ def startup_event_loop(config: Config):
     async def start_event_loop_lambda():
         loop = asyncio.get_event_loop()
         loop.create_task(watch_devices(config))
-        if config.is_to_start_photo_burst_at_startup:
+        if config.cam_mode == config.CAM_MODE_PHOTO_BURST:
             loop.create_task(check_photo_burst(config))
-        elif config.is_to_start_video_at_startup_and_continue:
+        elif config.cam_mode == config.CAM_MODE_VIDEO_CONTINUALLY:
             loop.create_task(start_and_continue_video_recording(config))
-        else:
+        elif config.cam_mode == config.CAM_MODE_VIDEO_SCHEDULED:
             loop.create_task(check_video_startup(config))
 
     return start_event_loop_lambda

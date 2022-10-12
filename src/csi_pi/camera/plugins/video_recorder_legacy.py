@@ -28,7 +28,7 @@ class VideoRecorderLegacy:
         self.current_video_file = None
         self.last_video_file = None
         self.last_mp4_file = None
-        self.video_record_lock = threading.Lock()
+        self.is_to_record = False
         self.video_postprocess = None
 
     def process_video_file(self):
@@ -44,19 +44,19 @@ class VideoRecorderLegacy:
         """Record for a specific duration into a file named by starting epoch, then record into another file
         while `ffmpeg` processing & uploading the previous file"""
         os.makedirs(self.video_folder, exist_ok=True)
-        if not self.video_record_lock.locked():
+        if not self.is_to_record:
             Thread(target=self.do_record, daemon=True, name='VideoRecordingDaemon').start()
         return json.dumps({'status': 'OK', 'folder': self.video_folder})
 
     def do_record(self):
-        self.video_record_lock.acquire()
-        while self.video_record_lock.locked():
+        self.is_to_record = True
+        while self.is_to_record:
             start = datetime.now()
             self.camera.annotate_text = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
             self.current_video_file = f"{self.video_folder}/{int((time.time() * 1000))}.h264"
             print(f"\n\ndo_record: Started new record -> {self.current_video_file}")
             self.camera.start_recording(self.current_video_file)
-            while self.video_record_lock.locked() and (
+            while self.is_to_record and (
                     (datetime.now() - start).seconds < self.video_chunk_length_seconds):
                 self.camera.annotate_text = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
                 self.camera.wait_recording(0.2)
@@ -67,9 +67,9 @@ class VideoRecorderLegacy:
         print("do_record: Ended Recording Video\n")
 
     def end_recording(self):
-        if self.video_record_lock.locked():
-            self.video_record_lock.release()
-        print(f"end_recording: Released -> {self.video_record_lock}\n")
+        if self.is_to_record:
+            self.is_to_record = False
+        print(f"end_recording: self.is_to_record = {self.is_to_record}\n")
         return json.dumps({'status': 'OK', 'file': self.last_mp4_file})
 
 

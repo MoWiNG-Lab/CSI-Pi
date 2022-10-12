@@ -11,12 +11,14 @@ class Config:
     data_dir = f"{app_dir}/storage/data/{time()}/"
 
     use_legacy_cam = (int(os.environ['USE_LEGACY_CAM']) == 1)
+    cam_mode = str(os.environ['CAM_MODE'])
+    CAM_MODE_PHOTO_BURST = "photo_burst"
+    CAM_MODE_VIDEO_CONTINUALLY = "continuous_video"
+    CAM_MODE_VIDEO_SCHEDULED = "scheduled_video"
 
-    is_to_start_photo_burst_at_startup = (int(os.environ['BEGIN_PHOTO_BURST_AT_STARTUP']) == 1)
     photo_burst_interval = int(os.environ['PHOTO_BURST_INTERVAL'])
     gdrive_photo_folder = os.environ['GDRIVE_PHOTO_FOLDER']
 
-    is_to_start_video_at_startup_and_continue = (int(os.environ['BEGIN_VIDEO_AT_STARTUP_AND_CONTINUE']) == 1)
     video_chunk_length = int(os.environ['VIDEO_CHUNK_LENGTH_SEC'])
     video_start_time = int(os.environ['VIDEO_START_TIME'])
     video_end_time = int(os.environ['VIDEO_END_TIME'])

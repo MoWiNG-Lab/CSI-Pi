@@ -83,7 +83,7 @@ async def check_photo_burst(config: Config):
 
 async def check_video_startup(config: Config):
     while True:
-        await asyncio.sleep(60)
+        await asyncio.sleep(30)
         now = dt.now()
         curr = now.hour * 100 + now.minute
         print(f"curr={curr}, start={config.video_start_time}, end={config.video_end_time}")

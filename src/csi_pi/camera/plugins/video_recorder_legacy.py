@@ -26,18 +26,20 @@ class VideoRecorderLegacy:
         self.camera.annotate_text_size = 12
         self.video_folder = f"{self.config.data_dir}videos_{time.time() * 1000}"
         self.current_video_file = None
-        self.last_video_file = None
-        self.last_mp4_file = None
+        self.latest_video_file = None
+        # TODO: need to use camera.device_path to identify each camera's last-mp4-file-path-holder file
+        self.latest_mp4_filename_holder_file = "/tmp/csi_pi_processed_latest_mp4file_path.txt"
         self.is_to_record = False
         self.video_postprocess = None
 
     def process_video_file(self):
         # 1. `ffmpeg` encode (e.g.: ffmpeg -r 15 -i video.h264 foo.mp4)
-        mp4file = f"{self.last_video_file}"[0:f"{self.last_video_file}".rindex(".")] + ".mp4"
-        cmd = f"nohup ffmpeg -r {self.fps} -i {self.last_video_file} {mp4file} -loglevel quiet && rm {self.last_video_file} &"
+        mp4file = f"{self.latest_video_file}"[0:f"{self.latest_video_file}".rindex(".")] + ".mp4"
+        cmd = f"nohup ffmpeg -r {self.fps} -i {self.latest_video_file} {mp4file} -loglevel quiet && " \
+              f"rm {self.latest_video_file} && " \
+              f"echo '{mp4file}' > {self.latest_mp4_filename_holder_file} &"
         print(f"process_video_file_in_bg: ffmpeg-cmd = {cmd}\n\n")
         self.video_postprocess = sp.Popen([cmd], shell=True)
-        self.last_mp4_file = mp4file
         # 2. Upload to Google-Drive / Server (needed or not?)
 
     def start_recording(self):
@@ -62,7 +64,7 @@ class VideoRecorderLegacy:
                 self.camera.wait_recording(0.2)
             print("do_record: Ended recording this chunk")
             self.camera.stop_recording()
-            self.last_video_file = self.current_video_file
+            self.latest_video_file = self.current_video_file
             Thread(target=self.process_video_file, daemon=True, name='VideoProcessorNonDaemon').start()
         print("do_record: Ended Recording Video\n")
 
@@ -70,7 +72,7 @@ class VideoRecorderLegacy:
         if self.is_to_record:
             self.is_to_record = False
         print(f"end_recording: self.is_to_record = {self.is_to_record}\n")
-        return json.dumps({'status': 'OK', 'file': self.last_mp4_file})
+        return json.dumps({'status': 'OK', 'file': self.latest_mp4_filename_holder_file})
 
 
 if __name__ == '__main__':

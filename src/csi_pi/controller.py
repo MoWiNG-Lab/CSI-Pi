@@ -259,3 +259,21 @@ class Controller:
         most_recent_photos = ['/'.join(f.split('/')[-2:]) for f in most_recent_photos if f is not None]
         most_recent_photos = [f'/files/{f}' for f in most_recent_photos]
         return JSONResponse({'status': 'OK', 'most_recent': most_recent_photos})
+
+    async def get_newest_video(self, request):
+        """
+        Return a path to the most recent photo for all photo_burst cameras.
+
+        :param request:
+        :return: JSON-object with list of most recent camera images.
+        """
+        latest_videos = []
+        for cam in self.config.cameras:
+            try:
+                with open(cam.video_recorder_legacy.latest_mp4_filename_holder_file) as file:
+                    latest_videos.append(file.read().strip())
+            except FileNotFoundError as fe:
+                continue
+        latest_videos = ['/'.join(f.split('/')[-2:]) for f in latest_videos if f is not None]
+        latest_videos = [f'/files/{f}' for f in latest_videos]
+        return JSONResponse({'status': 'OK', 'most_recent': latest_videos})

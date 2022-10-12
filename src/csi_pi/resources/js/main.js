@@ -8,6 +8,7 @@ window.onload = () => {
                 devices: {},
                 cameras: {},
                 camera_images: {},
+                camera_videos: {},
                 video_timer_span: "",
                 video_action_prompt: "Start Recording Video",
                 video_timer_start: null,
@@ -82,6 +83,13 @@ window.onload = () => {
                         });
                 }
 
+                function load_camera_videos() {
+                    axios.get("/video/newest")
+                        .then(response => {
+                            self.camera_videos = response.data.most_recent
+                        });
+                }
+
                 function eval_video_timer() {
                     /* region: Video-timer */
                     if (self.video_timer_start == null) {
@@ -124,6 +132,7 @@ window.onload = () => {
                 setInterval(load_annotation_metrics, 1000)
                 setInterval(load_server_stats, 1000)
                 setInterval(load_camera_images, 1000)
+                setInterval(load_camera_videos, 1000)
                 setInterval(eval_video_timer, 1000)
             },
             format_file_size(size) {

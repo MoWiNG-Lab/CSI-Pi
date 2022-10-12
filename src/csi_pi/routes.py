@@ -32,6 +32,7 @@ def get_routes(controller: Controller, config: Config):
         Route("/video/start", controller.start_video, methods=['POST']),
         Route("/video/end", controller.end_video, methods=['POST']),
         Route("/video/download", controller.download_video),
+        Route("/video/newest", controller.get_newest_video),
 
         Route("/photo/burst/start", controller.start_photo_burst, methods=['POST']),
         Route("/photo/burst/end", controller.end_photo_burst, methods=['POST']),

@@ -1,6 +1,7 @@
 import os
 from time import time
-from src.csi_pi.helpers import get_is_csi_enabled, load_from_file
+
+from src.csi_pi.helpers import get_is_csi_enabled
 
 
 def get_object(tty_full_path, tty_save_path, config):
@@ -55,7 +56,9 @@ class CSIDataTTYPlugin:
         """
 
         # Get Application Name
-        application = line.split(",")[1]
+        line_split = line.split(",")
+        num_csv_cols = len(line_split)
+        application = line_split[1] if num_csv_cols > 1 else self.application
         if self.application != application:
             f = open(f"/tmp/application{self.tty_full_path}", "w")
             f.write(str(application))
@@ -64,7 +67,7 @@ class CSIDataTTYPlugin:
             self.application = application
 
         # Get WiFi Channel
-        wifi_channel = line.split(",")[16]
+        wifi_channel = line_split[16] if num_csv_cols > 16 else 'X'
         if wifi_channel.isdigit() and self.wifi_channel != wifi_channel:
             f = open(f"/tmp/wifi_channel{self.tty_full_path}", "w")
             f.write(str(wifi_channel))
@@ -93,6 +96,6 @@ class CSIDataTTYPlugin:
             print("Got rate of", self.data_rate_stats['count'], "Hz")
 
             with open(f"/tmp/data_rates{self.tty_full_path}", "a") as data_rate_stats_file:
-                data_rate_stats_file.write(f"{self.data_rate_stats['current_second']},{self.data_rate_stats['count']}\n")
+                data_rate_stats_file.write(
+                    f"{self.data_rate_stats['current_second']},{self.data_rate_stats['count']}\n")
             self.data_rate_stats['count'] = 0
-

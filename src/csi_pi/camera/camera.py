@@ -1,10 +1,9 @@
 import os
-import threading
 import time
-import traceback
 
 from src.csi_pi.camera.plugins.photo_burst import PhotoBurst
 from src.csi_pi.camera.plugins.video_recorder import VideoRecorder
+from src.csi_pi.camera.plugins.video_recorder_legacy import VideoRecorderLegacy
 from src.csi_pi.config import Config
 
 
@@ -17,6 +16,7 @@ class Camera:
         self.config = config
 
         self.video_recorder = VideoRecorder(config=config)
+        self.video_recorder_legacy = VideoRecorderLegacy(config=config)
         self.photo_burst = PhotoBurst(config=config)
         self.device_path = device_path
 
@@ -45,7 +45,8 @@ class Camera:
         #     return "OK"
         # except:
         #     return f"ERROR: {traceback.format_exc()}"
-        return self.video_recorder.start_recording()
+        return self.video_recorder_legacy.start_recording() if self.config.use_legacy_cam \
+            else self.video_recorder.start_recording()
 
     def end_recording(self):
         # try:
@@ -60,7 +61,8 @@ class Camera:
         #         return ret
         # except:
         #     return f"ERROR: {traceback.format_exc()}"
-        return self.video_recorder.end_recording()
+        return self.video_recorder_legacy.end_recording() if self.config.use_legacy_cam \
+            else self.video_recorder.end_recording()
 
     def start_photo_burst(self, interval):
         return self.photo_burst.start_burst(interval)

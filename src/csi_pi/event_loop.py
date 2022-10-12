@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime as dt
 
 from src.csi_pi.camera.camera import Camera
 from src.csi_pi.camera.plugins.photo_burst import CaptureStatus
@@ -18,7 +19,7 @@ def check_devices(config: Config):
     check_esp32_devices(config)
 
 
-def check_cameras(config):
+def check_cameras(config: Config):
     active_cams = Camera.get_connected_cameras()
     # Remove newly disconnected devices
     for cam in config.cameras:
@@ -40,7 +41,7 @@ def check_cameras(config):
             config.cameras.append(camera)
 
 
-def check_esp32_devices(config):
+def check_esp32_devices(config: Config):
     # Identify all connected devices
     currently_connected_devices = Device.get_currently_connected_devices()
 
@@ -63,16 +64,16 @@ def check_esp32_devices(config):
             config.devices.append(device)
 
 
-async def check_photo_burst(config):
+async def check_photo_burst(config: Config):
     while True:
-        print(f"event_loop.py:: config.is_to_start_photo_burst_at_startup={config.is_to_start_photo_burst_at_startup}")
+        # print(f"event_loop.py:: config.is_to_start_photo_burst_at_startup={config.is_to_start_photo_burst_at_startup}")
         await asyncio.sleep(1)
-        print(f"event_loop.py:: len(config.cameras)={len(config.cameras)}")
+        # print(f"event_loop.py:: len(config.cameras)={len(config.cameras)}")
 
         # if there is at least one-camera and ENV file indicates to start photo-bursting at the startup of the server,
         # then start photo-bursting with the first camera.
         if len(config.cameras) > 0 and config.is_to_start_photo_burst_at_startup:
-                # and not config.cameras[0].photo_burst.is_capturing:
+            # and not config.cameras[0].photo_burst.is_capturing:
             if CaptureStatus.STANDBY == config.cameras[0].photo_burst.capture_status:  # not capturing & not stopped
                 config.cameras[0].start_photo_burst(int(config.photo_burst_interval))
             # The following call is self-sufficient to capture based on the conditions of capturing the photo.
@@ -80,17 +81,39 @@ async def check_photo_burst(config):
             # config.is_to_start_photo_burst_at_startup = False
 
 
+async def check_video_startup(config: Config):
+    while True:
+        await asyncio.sleep(1)
+        now = dt.now()
+        curr = now.hour * 100 + now.minute
+        print(f"curr={curr}, start={config.video_start_time}, end={config.video_end_time}")
+        if config.video_start_time <= curr <= config.video_end_time:
+            config.cameras[0].start_recording()
+        elif curr >= config.video_end_time or curr <= config.video_start_time:
+            config.cameras[0].end_recording()
+
+
 async def watch_devices(config: Config):
-    print("Start event loop. Watching for devices to connect or disconnected.")
+    print("Start event loop. Watching for devices to connect or disconnect.")
     while True:
         check_devices(config)
         await asyncio.sleep(1)
 
 
-def startup_event_loop(config):
+async def start_and_continue_video_recording(config):
+    await asyncio.sleep(5)
+    config.cameras[0].start_recording()
+
+
+def startup_event_loop(config: Config):
     async def start_event_loop_lambda():
         loop = asyncio.get_event_loop()
         loop.create_task(watch_devices(config))
-        loop.create_task(check_photo_burst(config))
+        if config.is_to_start_photo_burst_at_startup:
+            loop.create_task(check_photo_burst(config))
+        elif config.is_to_start_video_at_startup_and_continue:
+            loop.create_task(start_and_continue_video_recording(config))
+        else:
+            loop.create_task(check_video_startup(config))
 
     return start_event_loop_lambda

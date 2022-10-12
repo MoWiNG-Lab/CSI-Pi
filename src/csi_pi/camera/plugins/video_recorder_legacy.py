@@ -16,15 +16,15 @@ class VideoRecorderLegacy:
 
     def __init__(self, config: Config):
         self.config = config
-        self.video_chunk_length_seconds = 10 * 60
+        self.video_chunk_length_seconds = config.video_chunk_length
         self.fps = 15
 
         self.camera = PiCamera()
         self.camera.resolution = (840, 480)
         self.camera.framerate = self.fps
-        self.camera.hflip = True
+        self.camera.hflip = False
         self.camera.annotate_text_size = 12
-        self.video_folder = None
+        self.video_folder = f"{self.config.data_dir}videos_{time.time() * 1000}"
         self.current_video_file = None
         self.last_video_file = None
         self.last_mp4_file = None
@@ -43,9 +43,9 @@ class VideoRecorderLegacy:
     def start_recording(self):
         """Record for a specific duration into a file named by starting epoch, then record into another file
         while `ffmpeg` processing & uploading the previous file"""
-        self.video_folder = f"{self.config.data_dir}videos_{time.time() * 1000}"
         os.makedirs(self.video_folder, exist_ok=True)
-        Thread(target=self.do_record, daemon=True, name='VideoRecordingDaemon').start()
+        if not self.video_record_lock.locked():
+            Thread(target=self.do_record, daemon=True, name='VideoRecordingDaemon').start()
         return json.dumps({'status': 'OK', 'folder': self.video_folder})
 
     def do_record(self):
@@ -67,7 +67,8 @@ class VideoRecorderLegacy:
         print("do_record: Ended Recording Video\n")
 
     def end_recording(self):
-        self.video_record_lock.release()
+        if self.video_record_lock.locked():
+            self.video_record_lock.release()
         print(f"end_recording: Released -> {self.video_record_lock}\n")
         return json.dumps({'status': 'OK', 'file': self.last_mp4_file})
 

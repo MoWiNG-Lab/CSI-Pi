@@ -8,7 +8,7 @@ from time import time
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse, JSONResponse
 
 from src.csi_pi.config import Config
-from src.csi_pi.helpers import get_is_csi_enabled, toggle_csi, load_from_file
+from src.csi_pi.helpers import get_is_csi_enabled, toggle_csi, load_from_file, format_file_size
 
 
 class Controller:
@@ -66,7 +66,17 @@ class Controller:
                 'total': shutil.disk_usage("/").total,
             },
             'devices': [d.device_path for d in self.config.devices],
-            'cameras': [c.photo_burst.folder_path for c in self.config.cameras],
+            'cameras': [{
+                'photo_burst': {
+                    'count': c.photo_burst.num_images_captured,
+                    'size': float(sum([os.path.getsize(f) for f in os.scandir(c.photo_burst.folder_path)])) if c.photo_burst.folder_path is not None else 0,
+                },
+                'video_recorder_legacy_count': {
+                    'count': c.video_recorder_legacy.num_videos_captured,
+                    'size': float(sum([os.path.getsize(f) for f in os.scandir(c.video_recorder_legacy.video_folder)])) if c.video_recorder_legacy.video_folder is not None else 0,
+                    'video_length': c.video_recorder_legacy.video_chunk_length_seconds,
+                },
+            } for c in self.config.cameras],
             'hostname': socket.gethostname(),
         }))
 

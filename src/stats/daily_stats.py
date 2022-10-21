@@ -1,3 +1,4 @@
+import sys
 import os
 import math
 import requests
@@ -5,16 +6,8 @@ import shutil
 import json
 from time import time
 
-
-def format_file_size(file_size):
-    if file_size > 1e9:
-        file_size = f"{(file_size / 1e9):.1f} GBs"
-    elif file_size > 1e6:
-        file_size = f"{(file_size / 1e6):.1f} MBs"
-    else:
-        file_size = f"{(file_size / 1e3):.1f} kBs"
-
-    return file_size
+sys.path.append(sys.path[0] + "/../../")
+from src.csi_pi.helpers import format_file_size, format_seconds
 
 curr_time_seconds = math.floor(time())
 server_stats = json.loads(requests.get(url="http://localhost:8080/server-stats").text)
@@ -56,12 +49,9 @@ for tty_full_path in server_stats['devices']:
         print(f"{tty_full_path}, Exception while calculating stats: ", e)
 
 # For each camera
-for i, camera_photo_burst_path in enumerate(server_stats['cameras']):
-    size = sum([
-        os.path.getsize(f)
-        for f in os.scandir(camera_photo_burst_path)
-    ])
-    print(f"Camera #{i}: {len(os.listdir(camera_photo_burst_path))} photos, {format_file_size(size)}")
+for i, c in enumerate(server_stats['cameras']):
+    print(f"Camera #{i}: {c['photo_burst']['count']} photos, {format_file_size(c['photo_burst']['size'])}")
+    print(f"Camera #{i}: {c['video_recorder_legacy_count']['count']} videos ({format_seconds(c['video_recorder_legacy_count']['video_length'])} each), {format_file_size(c['video_recorder_legacy_count']['size'])}")
 
 storage_used = format_file_size(shutil.disk_usage("/").used)
 storage_available = format_file_size(shutil.disk_usage("/").total)

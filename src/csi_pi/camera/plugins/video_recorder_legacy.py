@@ -31,6 +31,8 @@ class VideoRecorderLegacy:
         self.latest_mp4_filename_holder_file = "/tmp/csi_pi_processed_latest_mp4file_path.txt"
         self.is_to_record = False
         self.video_postprocess = None
+        self.num_videos_captured = 0
+        os.mkdir(self.video_folder)
 
     def process_video_file(self):
         # 1. `ffmpeg` encode (e.g.: ffmpeg -r 15 -i video.h264 foo.mp4)
@@ -65,6 +67,7 @@ class VideoRecorderLegacy:
             print("do_record: Ended recording this chunk")
             self.camera.stop_recording()
             self.latest_video_file = self.current_video_file
+            self.num_videos_captured += 1
             Thread(target=self.process_video_file, daemon=True, name='VideoProcessorNonDaemon').start()
         print("do_record: Ended Recording Video\n")
 

@@ -88,3 +88,25 @@ def kill_child_processes():
             child.kill()
         except:
             pass
+
+
+def format_file_size(file_size):
+    if file_size > 1e9:
+        file_size = f"{(file_size / 1e9):.1f} GBs"
+    elif file_size > 1e6:
+        file_size = f"{(file_size / 1e6):.1f} MBs"
+    else:
+        file_size = f"{(file_size / 1e3):.1f} kBs"
+
+    return file_size
+
+
+def format_seconds(file_size):
+    if file_size >= 60 * 60:
+        file_size = f"{(file_size / (60 * 60)):.1f} hours(s)"
+    elif file_size >= 60:
+        file_size = f"{(file_size / 60):.1f} minute(s)"
+    else:
+        file_size = f"{file_size} second(s)"
+
+    return file_size

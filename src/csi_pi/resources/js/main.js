@@ -10,6 +10,7 @@ window.onload = () => {
                 annotations_data: "",
                 server_stats: {
                     data_directory: '',
+                    navigation: {},
                     is_csi_enabled: true,
                     tty_plugins: [],
                     storage: {

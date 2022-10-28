@@ -31,6 +31,9 @@
 
 Annotate, Steven M. Hernandez
 </pre>
+<div style="position: fixed; top: 20px; right: 20px;" v-cloak>
+    <a v-bind:href="value" class="navigation" v-bind:class="{'selected': location == value}" v-for="(value, key, index) in server_stats.navigation">{{ key }}</a>
+</div>
 <div v-if="false">Loading...</div>
 <div v-cloak>
 
@@ -66,6 +69,10 @@ window.onload = () => {
         el: '#app',
         data() {
             return {
+                server_stats: {
+                    data_directory: '',
+                    navigation: {},
+                },
                 new_label_text: "",
                 labels: [],
             }
@@ -83,6 +90,23 @@ window.onload = () => {
                     url: '/annotation?value=' + annotation_label,
                 })
             }
+        },
+        methods: {
+            reload() {
+                self = this
+
+                function load_server_stats() {
+                    axios.get("/server-stats")
+                        .then(response => {
+                            self.server_stats = response.data;
+                        });
+                }
+
+                load_server_stats();
+            }
+        },
+        mounted() {
+            this.reload()
         },
     });
 }

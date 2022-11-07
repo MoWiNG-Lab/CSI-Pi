@@ -7,6 +7,7 @@ load_dotenv()
 class Config:
     expt_name = os.environ['NAME']
     app_dir = os.environ['APP_DIR']
+    hostname = os.environ['HOSTNAME']
     shell_dir = f"{app_dir}/src/shell"
     data_dir = f"{app_dir}/storage/data/{time()}/"
 
@@ -24,6 +25,11 @@ class Config:
     video_end_time = int(os.environ['VIDEO_END_TIME'])
 
     WRITE_CSI_LOCK = '/tmp/lock.write_csi.txt'
+
+    navigation = {
+        x.split(',')[0]: x.split(',')[1]
+        for x in os.environ.get('NAVIGATION', '').replace("HOSTNAME", hostname).strip().split("\n")
+    }
 
     # Baud Rate
     esp32_baud_rate = int(os.environ.get('ESP32_BAUD_RATE', 921600))

@@ -128,6 +128,84 @@ CSI_PI_WEBHOOK='https://discord.com/api/webhooks/123123123/abc123123abc'
 0 * * * *  /usr/bin/curl --location --request POST $CSI_PI_WEBHOOK --form "content=\"$(/usr/bin/python3 /home/pi/CSI-Pi/src/stats/daily_stats.py)\""
 ```
 
+## TTY_PLUGINS
+
+The CSI data streaming through USB-Serial (TTY) from the ESP32s to CSI-Pi is automatically captured and recorded. 
+This processing is handled through the use of an extendable `tty_plugin` system and is specifically implemented in
+[tty_plugins/csi_data_plugin.py](https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/csi_data_plugin.py).
+Within this file, we have a normal Python class which implements the following interface:
+
+```
+class ExampleTTYPlugin:
+    def __init__(self, tty_full_path, tty_save_path, config):
+        pass
+        
+    def prefix_string(self):
+        """
+        For each incoming line from our devices we will look for the following prefix-string.
+        If the line starts with this string, then we will call `process(line)`.
+        :return: str
+        """
+
+        return "CSI_DATA,"
+
+    def process(self, line):
+        """
+        When we find a string that begins with `prefix_string()`, this function will be called.
+        Process the incoming line as you wish.
+        :param line: str
+        :return: None
+        """
+
+        pass
+
+    def process_every_millisecond(self, current_millisecond):
+        """
+        Process and store statistics for the past one second of TTY data.
+
+        :param current_millisecond:
+        :return:
+        """
+        
+        pass
+```
+
+Notice, the `prefix_string()` method returns a string `"CSI_DATA,"`. 
+As new lines of data are streamed from your USB-serial devices, CSI-Pi will check if the lines begin with this `prefix_string()`. 
+If they do, then CSI-Pi will automatically pass the new line to the `process()` method. 
+You are free to process the new line in any way that you see fit. 
+
+Currently, there are [three tty_plugins](https://github.com/StevenMHernandez/CSI-Pi/blob/main/src/csi_pi/tty_plugins/) built-into CSI-Pi.
+To create your own tty_plugins, create a new python file and build a new class which implements the above interface.
+To install the new tty_plugin, add it to `TTY_PLUGINS` within `~/.env` and restart the CSI-Pi service.
+
+### `src.csi_pi.tty_plugins.csi_data_plugin`
+
+The first and most important tty_plugin is the `csi_data_plugin` which captures all new lines starting with `CSI_DATA,`.
+These lines are saved in a local storage file and the plugin automatically calculates important metrics about the incoming data such as the data rate.
+
+### `src.csi_pi.tty_plugins.csipi_command_plugin`
+
+The `csipi_command_plugin` listens for any lines that begin with `CSIPI_COMMAND,`. 
+This tty_plugin allows you to control CSI-Pi directly from your ESP32 (or other) microcontroller.
+The following commands are currently implemented:
+
+* `DISABLE_CSI` will stop CSI data from being collected. This is useful if you only want to collect CSI periodically.
+* `ENABLE_CSI` will re-allow CSI data from being collected.
+
+Example: To disable CSI data collection, your ESP32 (or similar) microcontroller must send the following string through serial: `CSIPI_COMMAND,DISABLE_CSI\n`.
+
+### `src.csi_pi.tty_plugins.sensor_data_plugin`
+
+Finally, we have a tty_plugin which allows us to create new annotations automatically from your ESP32 (or other) microcontroller. 
+This is useful when we have a sensor that we wish to use for performing annotation.
+
+Suppose we have some sensor with a reading of value `10`. 
+If our ESP32 (or similar) microcontroller outputs the following string through serial: `SENSOR_DATA,10\n`,
+then the value `10` will automatically be posted as a new annotation. 
+Notice, we can pass not only numeric values, but also any string we wish. 
+For example: `SENSOR_DATA,ANYTHING_WE_WISH\n`.
+
 ## Common Issues
 
 **Power Supply**. Make sure you have a powerful enough power supply to prevent a brown out. 

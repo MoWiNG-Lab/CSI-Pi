@@ -58,6 +58,7 @@ class Controller:
         """
         return PlainTextResponse(json.dumps({
             'data_directory': self.config.data_dir,
+            'navigation': self.config.navigation,
             'notes': load_from_file(self.config.data_file_names['notes']),
             'is_csi_enabled': get_is_csi_enabled(self.config),
             'tty_plugins': self.config.tty_plugins,

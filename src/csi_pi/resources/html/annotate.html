@@ -23,6 +23,10 @@
 </head>
 <body>
 <div id="app">
+<div class="navigation" v-cloak>
+    <a v-bind:href="value" v-bind:class="{'selected': location == value}" v-for="(value, key, index) in server_stats.navigation">{{ key }}</a>
+</div>
+<div class="main">
 <pre>
     _   _  _ _  _  ___ _____ _ _____ ___
    /_\ | \| | \| |/ _ \_   _/_\_   _| __|
@@ -31,9 +35,6 @@
 
 Annotate, Steven M. Hernandez
 </pre>
-<div style="position: fixed; top: 20px; right: 20px;" v-cloak>
-    <a v-bind:href="value" class="navigation" v-bind:class="{'selected': location == value}" v-for="(value, key, index) in server_stats.navigation">{{ key }}</a>
-</div>
 <div v-if="false">Loading...</div>
 <div v-cloak>
 
@@ -53,7 +54,7 @@ Press and hold one of the buttons below to begin annotating the CSI data.
         {{ l }}
     </button>
 </div>
-
+</div>
 </div>
 </div>
 

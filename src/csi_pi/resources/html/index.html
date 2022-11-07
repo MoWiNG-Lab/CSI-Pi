@@ -7,6 +7,10 @@
 </head>
 <body>
 <div id="app">
+<div class="navigation" v-cloak>
+    <a v-bind:href="value" v-bind:class="{'selected': location == value}" v-for="(value, key, index) in server_stats.navigation">{{ key }}</a>
+</div>
+<div class="main">
 <pre>
    ___ ___ ___   ___ _
   / __/ __|_ _| | _ (_)
@@ -15,9 +19,6 @@
 
 CSI Pi, Steven M. Hernandez
 </pre>
-<div style="position: fixed; top: 20px; right: 20px;" v-cloak>
-    <a v-bind:href="value" class="navigation" v-bind:class="{'selected': location == value}" v-for="(value, key, index) in server_stats.navigation">{{ key }}</a>
-</div>
 <div v-if="false">Loading...</div>
 <div v-cloak>
 
@@ -61,6 +62,7 @@ Most Recent Annotation At: {{ annotations_data.split("\n").map(x => x.split(",")
 {{ annotations_data.split("\n")[0] }}
 {{ annotations_data.split("\n").reverse().join("\n") }}
 </pre>
+</div>
 </div>
 </div>
 

@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime as dt
 
-from src.csi_pi.camera.camera import Camera
+# from src.csi_pi.camera.camera import Camera
 from src.csi_pi.camera.plugins.photo_burst import CaptureStatus
 from src.csi_pi.config import Config
 from src.csi_pi.device import Device
@@ -15,7 +15,7 @@ def check_devices(config: Config):
     :param config:
     :return:
     """
-    check_cameras(config)
+    # check_cameras(config)
     check_esp32_devices(config)
 
 

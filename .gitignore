@@ -1,4 +1,5 @@
 *.DS_Store
+environment/
 .idea/
 __pycache__/
 venv/

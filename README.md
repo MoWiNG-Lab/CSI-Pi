@@ -12,7 +12,7 @@ Afterwards, from the Raspberry Pi terminal, run the following commands:
 
 ```
 # Install project dependencies
-sudo apt-get install git python3-pip libgirepository1.0-dev libcairo2-dev vim -y
+sudo apt-get install git python3-pip libgirepository1.0-dev libcairo2-dev vim -y --fix-missing
 
 # Download CSI-Pi from github
 git clone https://github.com/StevenMHernandez/CSI-Pi.git
@@ -29,8 +29,11 @@ sudo usermod -a -G dialout $USER
 # Set Your Local Timezone
 sudo dpkg-reconfigure tzdata
 
-# Copy config variables. Edit this file as you see fit
+# Copy config variables. 
 cp .env.example .env
+
+# Edit your configuration. Most important variables to edit: `APP_DIR=`, `HOSTNAME=`,
+nano .env
 ```
 
 ## Run Server
@@ -188,3 +191,5 @@ Brown outs can cause the Raspberry Pi to reset randomly, especially when many US
 **ESP32 Module**. Some modules seem to cause more issues than others. 
 We found that if the module does not auto-reset *when being flashed*, it will not automatically reset *when connected to CSI-Pi or when CSI-Pi restarts*. 
 *Help in analyzing this is appreciated!* 
+
+**`ModuleNotFoundError: No module named 'src'`** You are likely not in the correct directory. Make sure to `cd ~/CSI-Pi`.

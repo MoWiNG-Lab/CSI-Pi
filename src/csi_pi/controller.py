@@ -55,13 +55,13 @@ class Controller:
     async def reset(self, request):
         """
         Create a new folder to save the CSI & annotation files,
-        with optional suffix of the folder-name specified in `request.query_params['participant']`.
+        with optional suffix of the folder-name specified in `request.query_params['session']`.
 
         :param request:
         :return:
         """
-        participant_name = request.query_params['participant']
-        new_folder_name = str(time()) + (f"_{participant_name}" if len(participant_name) > 0 else "")
+        session_name = request.query_params['session']
+        new_folder_name = str(time()) + (f"_{session_name}" if len(session_name) > 0 else "")
         # Complete changing the folder-name, creating folder & files, etc.
         self.config.data_dir = f"{self.config.app_dir}/storage/data/{new_folder_name}/"
         setup_experiment_filesystem(self.config)

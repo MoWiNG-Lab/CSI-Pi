@@ -1,5 +1,7 @@
 # CSI Pi
 
+Developed by [Steven M. Hernandez](https://github.com/StevenMHernandez)
+
 ![CSI-Pi Vue.js Web Interface](figures/csi_pi_web.png)
 
 CSI-Pi allows CSI collection to be performed on a Raspberry Pi using any number of ESP32 microcontrollers connected through USB using the [ESP32-CSI-Tool](https://stevenmhernandez.github.io/ESP32-CSI-Tool/).
@@ -12,7 +14,7 @@ Afterwards, from the Raspberry Pi terminal, run the following commands:
 
 ```
 # Install project dependencies
-sudo apt-get install git python3-pip libgirepository1.0-dev libcairo2-dev vim -y
+sudo apt-get install git python3-pip libgirepository1.0-dev libcairo2-dev vim -y --fix-missing
 
 # Download CSI-Pi from github
 git clone https://github.com/StevenMHernandez/CSI-Pi.git
@@ -29,8 +31,11 @@ sudo usermod -a -G dialout $USER
 # Set Your Local Timezone
 sudo dpkg-reconfigure tzdata
 
-# Copy config variables. Edit this file as you see fit
+# Copy config variables. 
 cp .env.example .env
+
+# Edit your configuration. Most important variables to edit: `APP_DIR=`, `HOSTNAME=`,
+nano .env
 ```
 
 ## Run Server
@@ -214,3 +219,24 @@ Brown outs can cause the Raspberry Pi to reset randomly, especially when many US
 **ESP32 Module**. Some modules seem to cause more issues than others. 
 We found that if the module does not auto-reset *when being flashed*, it will not automatically reset *when connected to CSI-Pi or when CSI-Pi restarts*. 
 *Help in analyzing this is appreciated!* 
+
+**`ModuleNotFoundError: No module named 'src'`** You are likely not in the correct directory. Make sure to `cd ~/CSI-Pi`.
+
+## Citing this work
+
+If you use this project, please cite our work:
+
+> S. M. Hernandez and E. Bulut, "WiFi Sensing on the Edge: Signal Processing Techniques and Challenges for Real-World Systems," in Communications Surveys and Tutorials (IEEE COMST) 2023.
+
+```
+@article{EdgeWiFiSensing2023,
+  title={{{WiFi Sensing on the Edge: Signal Processing Techniques and Challenges for Real-World Systems}}},
+  author={Steven M. Hernandez and Eyuphan Bulut},
+  journal={IEEE Communications Surveys and Tutorials},
+  year={2023},
+  publisher={IEEE},
+  doi={10.1109/COMST.2022.3209144}
+}
+```
+
+A PDF version of this paper is available here: ["WiFi Sensing on the Edge PDF"](https://www.people.vcu.edu/~ebulut/COMST22_WiFi_Sensing_Survey.pdf).

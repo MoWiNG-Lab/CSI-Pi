@@ -2,7 +2,7 @@ import os
 import time
 
 from src.csi_pi.camera.plugins.photo_burst import PhotoBurst
-from src.csi_pi.camera.plugins.video_recorder import VideoRecorder
+from src.csi_pi.camera.plugins.video_recorder2 import VideoRecorder2
 from src.csi_pi.camera.plugins.video_recorder_legacy import VideoRecorderLegacy
 from src.csi_pi.config import Config
 
@@ -15,7 +15,7 @@ class Camera:
         self.recording_thread = None
         self.config = config
 
-        self.video_recorder = VideoRecorder(config=config)
+        self.video_recorder = VideoRecorder2(config=config)
         self.video_recorder_legacy = VideoRecorderLegacy(config=config)
         self.photo_burst = PhotoBurst(config=config)
         self.device_path = device_path

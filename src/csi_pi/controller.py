@@ -8,7 +8,10 @@ from time import time
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse, JSONResponse
 
 from src.csi_pi.config import Config
-from src.csi_pi.helpers import get_is_csi_enabled, toggle_csi, load_from_file, format_file_size
+from src.csi_pi.device import Device
+from src.csi_pi.event_loop import startup_event_loop
+from src.csi_pi.helpers import get_is_csi_enabled, toggle_csi, load_from_file, setup_experiment_filesystem, \
+    kill_child_processes, format_file_size
 
 
 class Controller:
@@ -47,6 +50,29 @@ class Controller:
             request.query_params['value'],
         ])) + "\n")
         self.config.data_file_names['annotations'].flush()
+        return PlainTextResponse("OK")
+
+    async def reset(self, request):
+        """
+        Create a new folder to save the CSI & annotation files,
+        with optional suffix of the folder-name specified in `request.query_params['participant']`.
+
+        :param request:
+        :return:
+        """
+        participant_name = request.query_params['participant']
+        new_folder_name = str(time()) + (f"_{participant_name}" if len(participant_name) > 0 else "")
+        # Complete changing the folder-name, creating folder & files, etc.
+        self.config.data_dir = f"{self.config.app_dir}/storage/data/{new_folder_name}/"
+        setup_experiment_filesystem(self.config)
+
+        # Let's Kill previous tty-listeners, replace previous tty-data-files,
+        #  & start listening to devices to write on new data-files (i.e. renew actions in `event_loop.py`)
+        for d in self.config.devices:
+            d.stop_listening(self.config)
+            self.config.data_file_names[d.device_path] = f"{self.config.data_dir}{d.device_path.split('/')[-1]}.csv"
+            d.start_listening(self.config)
+
         return PlainTextResponse("OK")
 
     async def get_server_stats(self, request):

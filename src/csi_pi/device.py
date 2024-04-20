@@ -13,8 +13,8 @@ class Device:
     def get_currently_connected_devices():
         devices = []
         for d in os.listdir("/dev"):
-            for type in ['ttyUSB', 'ttyACM']:
-                if type in d:
+            for ttyType in ['ttyUSB', 'ttyACM']:
+                if ttyType in d:
                     devices.append("/dev/" + d)
         return sorted(devices)
 

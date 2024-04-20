@@ -14,7 +14,14 @@
             text-decoration: none;
             cursor: pointer;
             margin-right: 10px;
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none; /* Safari */
+            -khtml-user-select: none; /* Konqueror HTML */
+            -moz-user-select: none; /* Old versions of Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
         }
+
         .btn:active {
             background: #666;
         }
@@ -23,6 +30,10 @@
 </head>
 <body>
 <div id="app">
+<div class="navigation" v-cloak>
+    <a v-bind:href="value" v-bind:class="{'selected': location == value}" v-for="(value, key, index) in server_stats.navigation">{{ key }}</a>
+</div>
+<div class="main">
 <pre>
     _   _  _ _  _  ___ _____ _ _____ ___
    /_\ | \| | \| |/ _ \_   _/_\_   _| __|
@@ -46,11 +57,13 @@ Annotate, Steven M. Hernandez
 There are {{ labels.length }} labels.
 Press and hold one of the buttons below to begin annotating the CSI data.
 <div>
-    <button v-for="l in labels" v-on:mousedown="sendLabel(l)" v-on:mouseup="sendLabel('none')" class="btn">
+    <button v-for="l in labels" class="btn"
+            v-on:mousedown="sendLabel(l)" v-on:mouseup="sendLabel('none')"
+            v-on:touchstart="sendLabel(l)" v-on:touchend="sendLabel('none')">
         {{ l }}
     </button>
 </div>
-
+</div>
 </div>
 </div>
 
@@ -66,6 +79,10 @@ window.onload = () => {
         el: '#app',
         data() {
             return {
+                server_stats: {
+                    data_directory: '',
+                    navigation: {},
+                },
                 new_label_text: "",
                 labels: [],
             }
@@ -82,7 +99,22 @@ window.onload = () => {
                     method: "post",
                     url: '/annotation?value=' + annotation_label,
                 })
+            },
+            reload() {
+                self = this
+
+                function load_server_stats() {
+                    axios.get("/server-stats")
+                        .then(response => {
+                            self.server_stats = response.data;
+                        });
+                }
+
+                load_server_stats();
             }
+        },
+        mounted() {
+            this.reload()
         },
     });
 }

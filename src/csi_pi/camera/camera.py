@@ -2,30 +2,30 @@ import os
 import time
 
 from src.csi_pi.camera.plugins.photo_burst import PhotoBurst
-from src.csi_pi.camera.plugins.video_recorder2 import VideoRecorder2
-from src.csi_pi.camera.plugins.video_recorder_legacy import VideoRecorderLegacy
 from src.csi_pi.config import Config
 
 
 # noinspection PyBroadException
 class Camera:
 
-    def __init__(self, config: Config, device_path):
+    def __init__(self, config: Config, device_path=None):
         self.picam2 = None
         self.recording_thread = None
         self.config = config
 
-        self.video_recorder = VideoRecorder2(config=config)
-        self.video_recorder_legacy = VideoRecorderLegacy(config=config)
+        if config.use_legacy_cam:
+            from src.csi_pi.camera.plugins.video_recorder_legacy import VideoRecorderLegacy
+            self.video_recorder_legacy = VideoRecorderLegacy(config=config)
+        else:
+            from src.csi_pi.camera.plugins.video_recorder2 import VideoRecorder2
+            self.video_recorder = VideoRecorder2(config=config)
+
         self.photo_burst = PhotoBurst(config=config)
         self.device_path = device_path
 
     @staticmethod
     def get_connected_cameras():
-        devices = []
-        for d in os.listdir("/dev"):
-            if "video" in d and len(d) < 7:
-                devices.append("/dev/" + d)
+        devices = ["/dev/" + d for d in os.listdir("/dev") if "video" in d and len(d) < 7]
         return sorted(devices)
 
     def start_recording(self):

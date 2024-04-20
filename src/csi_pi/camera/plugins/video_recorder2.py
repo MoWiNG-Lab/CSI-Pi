@@ -5,7 +5,6 @@ import time
 from datetime import datetime
 from threading import Thread
 
-import numpy as np
 # noinspection PyPackageRequirements
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder
@@ -66,13 +65,18 @@ class VideoRecorder2:
             # self.set_time_annotation(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))
             self.current_video_file = f"{self.video_folder}/{int((time.time() * 1000))}.h264"
             print(f"\n\ndo_record: Started new record -> {self.current_video_file}")
-            self.picam2.start_recording(self.encoder, self.current_video_file)
-            while self.is_to_record and (
-                    (datetime.now() - start).seconds < self.video_chunk_length_seconds):
-                # self.set_time_annotation(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))
-                time.sleep(0.2)
-            print("do_record: Ended recording this chunk")
-            self.picam2.stop_recording()
+
+            # self.picam2.start_and_record_video(output=self.current_video_file, encoder=self.encoder,
+            #           show_preview=False, duration=self.video_chunk_length_seconds, audio=False)
+            try:
+                self.picam2.start_recording(self.encoder, self.current_video_file)
+                while self.is_to_record and ((datetime.now() - start).seconds < self.video_chunk_length_seconds):
+                    # self.set_time_annotation(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))
+                    time.sleep(self.video_chunk_length_seconds + 0.01)
+                print("do_record: Ended recording this chunk")
+            finally:
+                self.picam2.stop_recording()
+
             self.latest_video_file = self.current_video_file
             self.num_videos_captured += 1
             Thread(target=self.process_video_file, daemon=True, name='VideoProcessorNonDaemon').start()
@@ -97,10 +101,10 @@ class VideoRecorder2:
 
 def local_test():
     vr2 = VideoRecorder2(Config())
-    vr2.video_chunk_length_seconds = 5
+    # vr2.video_chunk_length_seconds = 5
     print("-----------------Starting to record & then a 7s sleep ...-----------------")
     print(f"Return from start_recording: {vr2.start_recording()}")
-    time.sleep(7)
+    time.sleep(vr2.video_chunk_length_seconds * 2 + 10)
     print("-----------------7s Timer is Up-----------------")
     vr2.end_recording()
     time.sleep(1)

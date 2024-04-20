@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime as dt
 
-# from src.csi_pi.camera.camera import Camera
+from src.csi_pi.camera.camera import Camera
 from src.csi_pi.camera.plugins.photo_burst import CaptureStatus
 from src.csi_pi.config import Config
 from src.csi_pi.device import Device
@@ -15,8 +15,8 @@ def check_devices(config: Config):
     :param config:
     :return:
     """
-    # check_cameras(config)
     check_esp32_devices(config)
+    # check_cameras(config)
 
 
 def check_cameras(config: Config):
@@ -86,11 +86,19 @@ async def check_video_startup(config: Config):
         await asyncio.sleep(30)
         now = dt.now()
         curr = now.hour * 100 + now.minute
-        print(f"curr={curr}, start={config.video_start_time}, end={config.video_end_time}")
+        print(f"event_loop.py --> check_video_startup: curr={curr}, start={config.video_start_time}, end={config.video_end_time}")
         if config.video_start_time <= curr < config.video_end_time:
-            config.cameras[0].start_recording()
+            try:
+                config.cameras[0].start_recording()
+            except IndexError as ies:
+                print(ies)
+                Camera(config).start_recording()
         else:
-            config.cameras[0].end_recording()
+            try:
+                config.cameras[0].end_recording()
+            except IndexError as iee:
+                print(iee)
+                Camera(config).end_recording()
 
 
 async def watch_devices(config: Config):

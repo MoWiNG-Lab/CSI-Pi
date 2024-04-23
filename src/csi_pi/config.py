@@ -11,6 +11,11 @@ class Config:
     data_dir = f"{app_dir}/storage/data/{time()}/"
     WRITE_CSI_LOCK = '/tmp/lock.write_csi.txt'
 
+    influxdb_port = os.environ['INFLUXDB_PORT']
+    influxdb_user = os.environ['INFLUXDB_USER']
+    influxdb_pwd = os.environ['INFLUXDB_PASSWORD']
+    influxdb_dbn = os.environ['INFLUXDB_DB']
+
     navigation = {
         x.split(',')[0]: x.split(',')[1]
         for x in os.environ.get('NAVIGATION', '').replace("HOSTNAME", hostname).strip().split("\n")

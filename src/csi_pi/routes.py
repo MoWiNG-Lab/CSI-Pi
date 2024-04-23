@@ -10,6 +10,7 @@ def get_routes(controller: Controller):
         # Static Routes
         Route("/", controller.index),
         Route("/annotate", controller.annotate_index),
+        Route("/live_predictions", controller.live_predictions),
         Mount('/css', app=StaticFiles(directory='src/csi_pi/resources/css'), name="css"),
         Mount('/js', app=StaticFiles(directory='src/csi_pi/resources/js'), name="js"),
 

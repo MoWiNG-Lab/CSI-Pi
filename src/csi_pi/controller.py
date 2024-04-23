@@ -36,6 +36,15 @@ class Controller:
         """
         return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/resources/html/annotate.html').read())
 
+    async def live_predictions(self, request):
+        """
+        Returns the live-prediction web-page based on incoming WiFi CSI data
+
+        :param request:
+        :return:
+        """
+        return HTMLResponse(open(self.config.app_dir + '/src/csi_pi/resources/html/live_predictions.html').read())
+
     async def new_annotation(self, request):
         """
         Create a new annotation based on the value in `request.query_params['value']`.

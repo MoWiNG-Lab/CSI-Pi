@@ -2,13 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Style the slider */
+        input[type="range"] {
+            width: 80%;
+            margin-bottom: 10px;
+        }
+    </style>
     <title>Live Predictions on WiFi CSI Data</title>
 </head>
 <body>
-{#<br/>
+<div id="app">
+    <div class="navigation" v-cloak>
+        <a v-bind:href="value" v-bind:class="{'selected': location == value}"
+           v-for="(value, key, index) in server_stats.navigation">{{ key }}</a>
+    </div>
+    <pre>
+░█████╗░░██████╗██╗░░░░░░██╗░░░░░██╗██╗░░░██╗███████╗
+██╔══██╗██╔════╝██║░░░░░░██║░░░░░██║██║░░░██║██╔════╝
+██║░░╚═╝╚█████╗░██║█████╗██║░░░░░██║╚██╗░██╔╝█████╗░░
+██║░░██╗░╚═══██╗██║╚════╝██║░░░░░██║░╚████╔╝░██╔══╝░░
+╚█████╔╝██████╔╝██║░░░░░░███████╗██║░░╚██╔╝░░███████╗
+░╚════╝░╚═════╝░╚═╝░░░░░░╚══════╝╚═╝░░░╚═╝░░░╚══════╝
+𝔻𝕖𝕧𝕖𝕝𝕠𝕡𝕖𝕕 𝔹𝕪: 𝕥𝕠𝕦𝕙𝕚𝔻𝕣𝕠𝕚𝕕
+</pre>
+    <!--#<br/>
 1. Take `model.pkl` file, tty-link (drop-down?), & `CSI-Window-size` integer (slider?) as input,<br/>
 2. show a prediction graph on per CSI-frame, and finally<br/>
-3. show a majority-voted class-name below<br/>
-#}
+3. show a majority-voted class-name below<br/>#}!-->
+    <!-- File Upload Button -->
+    <div>
+        <input type="file" id="pkl-file-upload" accept=".pkl">
+
+        <div>-OR-</div>
+        <!-- Text Input Box -->
+        <label for="pkl-file-input-text">Google-Drive URL for the PKL File:</label>
+        <input type="text" id="pkl-file-input-text" placeholder="Input Google-Drive URL of the ML model pickle file.">
+
+        <br/>
+<div v-for="dev in devices" :key="dev.device_name"
+     v-bind:class="{'device_block': true, 'error': device_has_error(dev)}">
+    <apexchart type="line" height="150" ref="chart" :options="chart_options(device_has_error(dev))"
+               :series="[{'data': dev.data_rate.split('\n').filter(x => x).map(x => x.split(',')[1]).slice(-60)}]"></apexchart>
+<div v-if="!server_stats.is_csi_enabled" style="color: red">CSI COLLECTION IS CURRENTLY DISABLED</div>
+Device: {{ dev.device_name }} <br>
+Application: {{ dev.application }} <br>
+Channel: {{ dev.wifi_channel }} <br>
+Data Rate: {{ dev.data_rate.split("\n").filter(x => x).map(x => x.split(",")[1]).slice(-2, -1)[0] }} Hz <br>
+File Size: {{ dev.files_size }} bytes ({{ format_file_size(dev.files_size) }}) <br>
+<pre class="horizontal_scrollable" v-if="dev.most_recent_csi.samples.length > 0">
+Most Recent CSI At: {{ dev.most_recent_csi.samples.split("\n").map(x => x.split(",").slice(-2, -1)[0]).slice(-2,-1).map(x => new Date(parseFloat(x)))[0] }}
+{{ dev.most_recent_csi.samples }}</pre>
+</div>
+
+        <br/>
+        <!-- Integer Slider -->
+        <label for="csi-win-integer-slider">CSI Window Size: </label>
+        <input type="range" id="csi-win-integer-slider" min="50" max="1000" value="100">
+
+        <!-- Big Text -->
+        <div id="pred-out-text">Predicted Class:</div>
+
+    </div>
+
+</div>
+</div>
+<script>
+    // Event listener for pkl file upload button
+    document.getElementById('pkl-file-upload').addEventListener('change', function (event) {
+        // Handle file upload here
+        const file = event.target.files[0];
+        console.log('File uploaded:', file);
+    });
+
+    // Event listener for pkl file URL input box
+    document.getElementById('pkl-file-input-text').addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {
+            const text = event.target.value;
+            console.log('Entered text:', text);
+            // Clear input box after pressing Enter
+            event.target.value = '';
+        }
+    });
+
+    // Event listener for CSI window input integer slider
+    document.getElementById('csi-win-integer-slider').addEventListener('input', function (event) {
+        const value = event.target.value;
+        console.log('Slider value:', value);
+    });
+</script>
+
+
+<script src="/js/vue.min.js"></script>
+<script src="/js/axios.min.js"></script>
+<script src="/js/apexcharts.min.js"></script>
+<script src="/js/vue-apexcharts.min.js"></script>
+<script src="/js/lodash.full.min.js"></script>
+<script src="/js/main.js"></script>
 </body>
 </html>

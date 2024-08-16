@@ -3,6 +3,7 @@ from copy import deepcopy
 from time import time
 
 from influxdb import InfluxDBClient
+import asyncio
 
 
 def get_object(tty_full_path, tty_save_path, config):
@@ -42,7 +43,8 @@ class CSILiveDataTTYPlugin:
                 "csi_line": csi_line
             }
         }]
-        self.idb_client.write_points(jo)
+        asyncio.run(self.idb_client.write_points(jo))
+
         # self.json_points_cache.append(jo)
         # self.log_file.write(f"JSON Points so far = {len(self.json_points_cache)}\n")
         # if len(self.json_points_cache) >= 50:

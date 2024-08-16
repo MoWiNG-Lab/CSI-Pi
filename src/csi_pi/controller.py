@@ -8,6 +8,7 @@ from time import time
 from starlette.responses import PlainTextResponse, HTMLResponse, FileResponse
 
 from src.csi_pi.config import Config
+from src.csi_pi.ml.predictor import Predictor
 from src.csi_pi.device import Device
 from src.csi_pi.event_loop import startup_event_loop
 from src.csi_pi.helpers import get_is_csi_enabled, toggle_csi, load_from_file, setup_experiment_filesystem, \
@@ -166,6 +167,21 @@ class Controller:
                     zipf.write(os.path.join(file_path, 'annotations.csv'), f"{d}/annotations.csv")
 
         return FileResponse(filename, filename='CSI.zip')
+
+    async def get_predictions(self):
+        """
+        Returns a JSON array of per second predictions for the mentioned `duration` number of seconds.
+
+        :param request:
+        :return:
+        """
+        model_file = request.query_params['model_file']
+        csi_window_size = request.query_params['csi_window_size']
+        device_name = request.query_params['device']
+        dur_seconds = request.query_params['duration']
+        predictor = Predictor(self.config, model_file, csi_window_size, device_name, dur_seconds)
+        json_arr_pred = predictor.predict()
+        return PlainTextResponse(json_arr_pred)
 
     async def enable_csi(self, request):
         """

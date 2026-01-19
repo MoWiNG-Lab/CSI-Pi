@@ -17,7 +17,7 @@ Afterwards, from the Raspberry Pi terminal, run the following commands:
 sudo apt-get install git python3-pip libgirepository1.0-dev libcairo2-dev vim -y --fix-missing
 
 # Download CSI-Pi from github
-git clone https://github.com/StevenMHernandez/CSI-Pi.git
+git clone https://github.com/MoWiNG-Lab/CSI-Pi.git
 
 # Open the project directory
 cd CSI-Pi
